@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import { Plus, Trash2, Folder, FolderOpen } from 'lucide-react-taro'
+import { Plus, Trash2, Folder, FolderOpen, Pencil } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
@@ -30,6 +30,8 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   const [selectedParentId, setSelectedParentId] = useState<string | null>(null)
   const [showAddSubDialog, setShowAddSubDialog] = useState(false)
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null)
+  const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null)
+  const [editName, setEditName] = useState('')
 
   const fetchCategories = async () => {
     setLoading(true)
@@ -49,13 +51,46 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     }
   }, [open])
 
+  // Check if category name already exists
+  const checkDuplicate = (name: string, parentId: string | null): CategoryItem | null => {
+    const normalizedName = name.trim().toLowerCase()
+    for (const cat of categories) {
+      if (parentId === null) {
+        // Check top-level categories
+        if (cat.name.toLowerCase() === normalizedName) {
+          return cat
+        }
+      } else {
+        // Check sub-categories under the parent
+        if (cat.id === parentId && cat.children) {
+          for (const sub of cat.children) {
+            if (sub.name.toLowerCase() === normalizedName) {
+              return sub
+            }
+          }
+        }
+      }
+    }
+    return null
+  }
+
   const handleAddCategory = async () => {
-    if (!newCategoryName.trim()) return
+    const name = newCategoryName.trim()
+    if (!name) return
+    
+    // Check for duplicate
+    const existing = checkDuplicate(name, null)
+    if (existing) {
+      // Category already exists, just close the dialog
+      setNewCategoryName('')
+      return
+    }
+    
     try {
       await Network.request({
         url: '/api/categories',
         method: 'POST',
-        data: { name: newCategoryName.trim(), type: 'shared' },
+        data: { name, type: 'shared' },
       })
       setNewCategoryName('')
       await fetchCategories()
@@ -66,12 +101,24 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   }
 
   const handleAddSubCategory = async () => {
-    if (!newSubCategoryName.trim() || !selectedParentId) return
+    const name = newSubCategoryName.trim()
+    if (!name || !selectedParentId) return
+    
+    // Check for duplicate
+    const existing = checkDuplicate(name, selectedParentId)
+    if (existing) {
+      // Sub-category already exists, just close the dialog
+      setNewSubCategoryName('')
+      setSelectedParentId(null)
+      setShowAddSubDialog(false)
+      return
+    }
+    
     try {
       await Network.request({
         url: '/api/categories',
         method: 'POST',
-        data: { name: newSubCategoryName.trim(), type: 'shared', parent_id: selectedParentId },
+        data: { name, type: 'shared', parent_id: selectedParentId },
       })
       setNewSubCategoryName('')
       setSelectedParentId(null)
@@ -98,9 +145,31 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     }
   }
 
+  const handleEditCategory = async () => {
+    if (!editingCategory || !editName.trim()) return
+    try {
+      await Network.request({
+        url: `/api/categories/${editingCategory.id}`,
+        method: 'PUT',
+        data: { name: editName.trim() },
+      })
+      setEditingCategory(null)
+      setEditName('')
+      await fetchCategories()
+      onCategoriesChanged()
+    } catch (e) {
+      console.error('Failed to edit category', e)
+    }
+  }
+
   const openAddSubDialog = (parentId: string) => {
     setSelectedParentId(parentId)
     setShowAddSubDialog(true)
+  }
+
+  const openEditDialog = (category: CategoryItem) => {
+    setEditingCategory(category)
+    setEditName(category.name)
   }
 
   return (
@@ -152,6 +221,13 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                           <View className="flex flex-row items-center gap-2">
                             <Button
                               size="sm"
+                              variant="ghost"
+                              onClick={() => openEditDialog(cat)}
+                            >
+                              <Pencil size={14} color="#3b82f6" />
+                            </Button>
+                            <Button
+                              size="sm"
                               variant="outline"
                               onClick={() => openAddSubDialog(cat.id)}
                             >
@@ -175,13 +251,22 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                             {cat.children.map((sub) => (
                               <View key={sub.id} className="flex flex-row items-center justify-between">
                                 <Text className="text-sm text-gray-600">{sub.name}</Text>
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  onClick={() => setDeletingCategory(sub)}
-                                >
-                                  <Trash2 size={12} color="#ef4444" />
-                                </Button>
+                                <View className="flex flex-row items-center gap-2">
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => openEditDialog(sub)}
+                                  >
+                                    <Pencil size={12} color="#3b82f6" />
+                                  </Button>
+                                  <Button
+                                    size="sm"
+                                    variant="ghost"
+                                    onClick={() => setDeletingCategory(sub)}
+                                  >
+                                    <Trash2 size={12} color="#ef4444" />
+                                  </Button>
+                                </View>
                               </View>
                             ))}
                           </View>
@@ -220,6 +305,33 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
             </Button>
             <Button onClick={handleAddSubCategory} disabled={!newSubCategoryName.trim()}>
               <Text className="text-white">添加</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit category dialog */}
+      <Dialog open={!!editingCategory} onOpenChange={() => setEditingCategory(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>编辑分类</DialogTitle>
+          </DialogHeader>
+          <View className="py-4">
+            <Input
+              placeholder="输入新名称"
+              value={editName}
+              onInput={(e) => setEditName(e.detail.value)}
+            />
+            <Text className="block text-xs text-gray-400 mt-2">
+              修改后对已有和后续的记录都会同时生效。
+            </Text>
+          </View>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditingCategory(null)}>
+              <Text className="text-gray-600">取消</Text>
+            </Button>
+            <Button onClick={handleEditCategory} disabled={!editName.trim()}>
+              <Text className="text-white">保存</Text>
             </Button>
           </DialogFooter>
         </DialogContent>

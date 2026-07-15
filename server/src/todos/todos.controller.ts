@@ -15,6 +15,7 @@ export class TodosController {
     @Query('deadline_before') deadlineBefore?: string,
     @Query('sort_by') sortBy?: string,
     @Query('sort_order') sortOrder?: string,
+    @Query('parent_todo_id') parentTodoId?: string,
   ) {
     const data = await this.todosService.findAll({
       status,
@@ -24,6 +25,7 @@ export class TodosController {
       deadline_before: deadlineBefore,
       sort_by: sortBy,
       sort_order: sortOrder,
+      parent_todo_id: parentTodoId,
     });
     return { code: 200, msg: 'success', data };
   }

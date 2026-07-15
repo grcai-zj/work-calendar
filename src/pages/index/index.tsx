@@ -116,6 +116,7 @@ export default function Index() {
   const [showCategoryManagement, setShowCategoryManagement] = useState(false)
   const [completedPage, setCompletedPage] = useState(1)
   const COMPLETED_PAGE_SIZE = 10
+  const [detailItem, setDetailItem] = useState<{ type: 'work' | 'todo'; data: WorkRecord | TodoItem } | null>(null)
 
   // Drawer states
   const [showAddWork, setShowAddWork] = useState(false)
@@ -326,22 +327,28 @@ export default function Index() {
   const updateParentStatus = async (parentId: string) => {
     try {
       // Fetch all sub-items of this parent
-      const res = await Network.request({ url: `/api/todos?status=` })
-      const allTodos = res.data?.data || []
-      const subItems = allTodos.filter((t: TodoItem) => t.parent_todo_id === parentId)
+      const res = await Network.request({ url: `/api/todos?parent_todo_id=${parentId}` })
+      const subItems = res.data?.data || []
       
-      // Check if all sub-items are completed
+      if (subItems.length === 0) return
+      
+      // Check sub-items status
+      // All not started → parent not started
+      // All completed → parent completed
+      // Other cases → parent in progress
       const allCompleted = subItems.every((t: TodoItem) => t.status === 'completed')
-      const anyCompleted = subItems.some((t: TodoItem) => t.status === 'completed')
+      const allNotStarted = subItems.every((t: TodoItem) => t.status === 'not_started')
       
-      let newStatus = 'not_started'
+      let newStatus = 'in_progress'
       if (allCompleted) {
         newStatus = 'completed'
-      } else if (anyCompleted) {
-        newStatus = 'in_progress'
+      } else if (allNotStarted) {
+        newStatus = 'not_started'
       }
       
       await Network.request({ url: `/api/todos/${parentId}`, method: 'PUT', data: { status: newStatus } })
+      // Refresh todos list
+      await fetchTodos()
     } catch (e) {
       console.error('Failed to update parent status', e)
     }
@@ -582,7 +589,7 @@ export default function Index() {
                 ) : (
                   <View className="gap-2">
                     {workRecords.map((record) => (
-                      <Card key={record.id}>
+                      <Card key={record.id} onClick={() => setDetailItem({ type: 'work', data: record })}>
                         <CardContent className="p-3">
                           <View className="flex flex-row items-start justify-between">
                             <View className="flex-1">
@@ -604,7 +611,7 @@ export default function Index() {
                                 </View>
                               )}
                             </View>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteWork(record.id)}>
+                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteWork(record.id); }}>
                               <Trash2 size={14} color="#9ca3af" />
                             </Button>
                           </View>
@@ -709,7 +716,7 @@ export default function Index() {
                                   </View>
                                 }
                               >
-                                <Card className="rounded-none">
+                                <Card className="rounded-none" onClick={() => setDetailItem({ type: 'todo', data: todo })}>
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
@@ -766,7 +773,7 @@ export default function Index() {
                                             {todo.children!.map((child) => (
                                               <SwipeableItem
                                                 key={child.id}
-                                                actionWidth={60}
+                                                actionWidth={140}
                                                 actions={
                                                   <View
                                                     className="flex-1 bg-red-500 h-full items-center justify-center"
@@ -1050,6 +1057,110 @@ export default function Index() {
         onOpenChange={setShowCategoryManagement}
         onCategoriesChanged={() => fetchCategories()}
       />
+
+      {/* Detail dialog */}
+      <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>
+              {detailItem?.type === 'work' ? '工作内容详情' : '待办事项详情'}
+            </DialogTitle>
+          </DialogHeader>
+          <View className="py-4 gap-3">
+            {detailItem && detailItem.type === 'work' ? (
+              (() => {
+                const data = detailItem.data as WorkRecord
+                return (
+                  <>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">大类：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.category_name}</Text>
+                    </View>
+                    {data.sub_category_name && (
+                      <View className="flex flex-row gap-2">
+                        <Text className="text-sm text-gray-500 w-20">小类：</Text>
+                        <Text className="text-sm text-gray-800 flex-1">{data.sub_category_name}</Text>
+                      </View>
+                    )}
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">内容：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.content}</Text>
+                    </View>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">耗时：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.hours} 小时</Text>
+                    </View>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">日期：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.record_date}</Text>
+                    </View>
+                  </>
+                )
+              })()
+            ) : detailItem && detailItem.type === 'todo' ? (
+              (() => {
+                const data = detailItem.data as TodoItem
+                return (
+                  <>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">大类：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.category_name}</Text>
+                    </View>
+                    {data.sub_category_name && (
+                      <View className="flex flex-row gap-2">
+                        <Text className="text-sm text-gray-500 w-20">小类：</Text>
+                        <Text className="text-sm text-gray-800 flex-1">{data.sub_category_name}</Text>
+                      </View>
+                    )}
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">内容：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.content}</Text>
+                    </View>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">优先级：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{PRIORITY_MAP[data.priority]?.label || data.priority}</Text>
+                    </View>
+                    {data.related_person && (
+                      <View className="flex flex-row gap-2">
+                        <Text className="text-sm text-gray-500 w-20">相关人员：</Text>
+                        <Text className="text-sm text-gray-800 flex-1">{data.related_person}</Text>
+                      </View>
+                    )}
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">截止时间：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">{data.deadline || '无'}</Text>
+                    </View>
+                    <View className="flex flex-row gap-2">
+                      <Text className="text-sm text-gray-500 w-20">状态：</Text>
+                      <Text className="text-sm text-gray-800 flex-1">
+                        {data.status === 'completed' ? '已完成' :
+                         data.status === 'in_progress' ? '进行中' : '未开始'}
+                      </Text>
+                    </View>
+                    {data.completed_at && (
+                      <View className="flex flex-row gap-2">
+                        <Text className="text-sm text-gray-500 w-20">完成时间：</Text>
+                        <Text className="text-sm text-gray-800 flex-1">{data.completed_at}</Text>
+                      </View>
+                    )}
+                    {data.hours && (
+                      <View className="flex flex-row gap-2">
+                        <Text className="text-sm text-gray-500 w-20">耗时：</Text>
+                        <Text className="text-sm text-gray-800 flex-1">{data.hours} 小时</Text>
+                      </View>
+                    )}
+                  </>
+                )
+              })()
+            ) : null}
+          </View>
+          <DialogFooter>
+            <Button onClick={() => setDetailItem(null)}>
+              <Text className="text-white">关闭</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </ScrollView>
   )
 }

@@ -35,11 +35,18 @@ export class TodosService {
     deadline_before?: string;
     sort_by?: string;
     sort_order?: string;
+    parent_todo_id?: string;
   }): Promise<Todo[]> {
     let query = this.client
       .from('todos')
-      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
-      .is('parent_todo_id', null); // 只查主待办
+      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at');
+
+    // 如果指定了 parent_todo_id，则查询子项
+    if (filters.parent_todo_id) {
+      query = query.eq('parent_todo_id', filters.parent_todo_id);
+    } else {
+      query = query.is('parent_todo_id', null); // 只查主待办
+    }
 
     if (filters.status) {
       query = query.eq('status', filters.status);
