@@ -741,7 +741,7 @@ export default function Index() {
                                 {/* Parent todo row - buttons only cover parent height */}
                                 <View className="flex flex-row items-stretch gap-0">
                                   <Card className="flex-1 rounded-r-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
-                                    <CardContent className="p-3">
+                                    <CardContent className="p-2">
                                       <View className="flex flex-row items-start gap-2">
                                         {/* Status icon */}
                                         <View className="pt-1" onClick={(e) => e.stopPropagation()}>
