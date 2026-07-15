@@ -701,7 +701,7 @@ export default function Index() {
                         </View>
 
                         {/* Todo items */}
-                        <View className="gap-2">
+                        <View className="gap-4">
                           {group.items.map((todo) => {
                             const isExpanded = expandedTodos.has(todo.id)
                             const hasChildren = todo.children && todo.children.length > 0
@@ -787,7 +787,7 @@ export default function Index() {
                                       </Text>
                                     </View>
                                     {isExpanded && (
-                                      <View className="gap-3">
+                                      <View className="gap-1">
                                         {todo.children!.map((child) => (
                                           <View key={child.id} className="flex flex-row items-stretch gap-0">
                                             <View 
