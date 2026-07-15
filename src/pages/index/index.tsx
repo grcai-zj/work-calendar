@@ -597,8 +597,16 @@ export default function Index() {
                 ) : (
                   <View className="gap-2">
                     {workRecords.map((record) => (
-                      <View key={record.id} className="flex flex-row items-center gap-2">
-                        <Card className="flex-1" onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
+                      <View key={record.id} className="flex flex-col gap-1">
+                        <View className="flex flex-row justify-end">
+                          <View
+                            className="w-7 h-7 bg-red-500 rounded flex items-center justify-center"
+                            onClick={() => handleDeleteWork(record.id)}
+                          >
+                            <Text className="text-white text-sm font-bold">-</Text>
+                          </View>
+                        </View>
+                        <Card onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
                           <CardContent className="p-3">
                             <View className="flex-1">
                               <View className="flex flex-row items-center gap-2 mb-1">
@@ -621,12 +629,6 @@ export default function Index() {
                             </View>
                           </CardContent>
                         </Card>
-                        <View
-                          className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center"
-                          onClick={() => handleDeleteWork(record.id)}
-                        >
-                          <Text className="text-red-500 text-lg font-bold">-</Text>
-                        </View>
                       </View>
                     ))}
                     <View className="flex flex-row items-center justify-end gap-1">
@@ -694,8 +696,25 @@ export default function Index() {
                             const hasChildren = todo.children && todo.children.length > 0
                             const completedCount = todo.children?.filter(c => c.status === 'completed').length || 0
                             return (
-                              <View key={todo.id} className="flex flex-row items-stretch gap-2">
-                                <Card className="flex-1 rounded-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
+                              <View key={todo.id} className="flex flex-col gap-1">
+                                <View className="flex flex-row justify-end gap-2">
+                                  <View
+                                    className="w-7 h-7 bg-red-500 rounded flex items-center justify-center"
+                                    onClick={() => handleDeleteTodo(todo.id)}
+                                  >
+                                    <Text className="text-white text-sm font-bold">-</Text>
+                                  </View>
+                                  <View
+                                    className="w-7 h-7 bg-blue-500 rounded flex items-center justify-center"
+                                    onClick={() => {
+                                      setSubItemParentId(todo.id)
+                                      setShowAddSubItem(true)
+                                    }}
+                                  >
+                                    <Text className="text-white text-sm font-bold">+</Text>
+                                  </View>
+                                </View>
+                                <Card className="rounded-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
@@ -767,10 +786,10 @@ export default function Index() {
                                                   </Text>
                                                   </View>
                                                   <View
-                                                    className="w-6 h-6 bg-red-50 rounded-full flex items-center justify-center"
+                                                    className="w-6 h-6 bg-red-500 rounded flex items-center justify-center"
                                                     onClick={() => handleDeleteTodo(child.id)}
                                                   >
-                                                    <Text className="text-red-500 text-sm font-bold">-</Text>
+                                                    <Text className="text-white text-xs font-bold">-</Text>
                                                   </View>
                                                 </View>
                                             ))}
@@ -780,23 +799,6 @@ export default function Index() {
                                     )}
                                   </CardContent>
                                 </Card>
-                                <View className="flex flex-col justify-end gap-2">
-                                  <View
-                                    className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center"
-                                    onClick={() => handleDeleteTodo(todo.id)}
-                                  >
-                                    <Text className="text-red-500 text-lg font-bold">-</Text>
-                                  </View>
-                                  <View
-                                    className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center"
-                                    onClick={() => {
-                                      setSubItemParentId(todo.id)
-                                      setShowAddSubItem(true)
-                                    }}
-                                  >
-                                    <Text className="text-blue-500 text-lg font-bold">+</Text>
-                                  </View>
-                                </View>
                               </View>
                             )
                           })}
