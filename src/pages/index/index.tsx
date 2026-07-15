@@ -803,7 +803,7 @@ export default function Index() {
 
                                 {/* Sub items section - separate from parent buttons */}
                                 {hasChildren && (
-                                  <View className="mt-1 ml-4">
+                                  <View className="ml-4">
                                     <View
                                       className="flex flex-row items-center gap-1 py-1"
                                       onClick={(e) => {
