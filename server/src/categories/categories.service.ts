@@ -94,15 +94,16 @@ export class CategoriesService {
   }
 
   // 更新分类
-  async update(id: string, body: { name?: string; sort_order?: number }): Promise<Category> {
+  async update(id: string, body: { name?: string; sort_order?: number; hidden?: boolean }): Promise<Category> {
     const updateData: any = {};
     if (body.name !== undefined) updateData.name = body.name;
     if (body.sort_order !== undefined) updateData.sort_order = body.sort_order;
+    if (body.hidden !== undefined) updateData.hidden = body.hidden;
     const { data, error } = await this.client
       .from('categories')
       .update(updateData)
       .eq('id', id)
-      .select('id, parent_id, name, type, level, sort_order, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
       .single();
     if (error) throw new Error(`更新分类失败: ${error.message}`);
     return data as Category;

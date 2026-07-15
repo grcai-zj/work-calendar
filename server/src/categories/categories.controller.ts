@@ -29,7 +29,7 @@ export class CategoriesController {
 
   @Put(':id')
   @HttpCode(200)
-  async update(@Param('id') id: string, @Body() body: { name?: string; sort_order?: number }) {
+  async update(@Param('id') id: string, @Body() body: { name?: string; sort_order?: number; hidden?: boolean }) {
     const data = await this.categoriesService.update(id, body);
     return { code: 200, msg: 'success', data };
   }

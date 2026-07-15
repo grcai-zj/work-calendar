@@ -1,10 +1,11 @@
 import { useState, useEffect } from 'react'
 import { View, Text, ScrollView } from '@tarojs/components'
-import { Plus, Trash2, Folder, FolderOpen, Pencil } from 'lucide-react-taro'
+import { Plus, Trash2, Folder, FolderOpen, Pencil, Eye, EyeOff } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Network } from '@/network'
 
 interface CategoryItem {
@@ -13,6 +14,7 @@ interface CategoryItem {
   name: string
   type: string
   level: number
+  hidden?: boolean
   children?: CategoryItem[]
 }
 
@@ -32,6 +34,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null)
   const [editingCategory, setEditingCategory] = useState<CategoryItem | null>(null)
   const [editName, setEditName] = useState('')
+  const [showHidden, setShowHidden] = useState(false)
 
   const fetchCategories = async () => {
     setLoading(true)
@@ -162,6 +165,20 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     }
   }
 
+  const handleToggleHidden = async (category: CategoryItem) => {
+    try {
+      await Network.request({
+        url: `/api/categories/${category.id}`,
+        method: 'PUT',
+        data: { hidden: !category.hidden },
+      })
+      await fetchCategories()
+      onCategoriesChanged()
+    } catch (e) {
+      console.error('Failed to toggle hidden', e)
+    }
+  }
+
   const openAddSubDialog = (parentId: string) => {
     setSelectedParentId(parentId)
     setShowAddSubDialog(true)
@@ -171,6 +188,15 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     setEditingCategory(category)
     setEditName(category.name)
   }
+
+  // Filter categories based on showHidden state
+  const filteredCategories = showHidden 
+    ? categories 
+    : categories.filter(cat => !cat.hidden)
+
+  // Count hidden categories
+  const hiddenCount = categories.filter(cat => cat.hidden).length + 
+    categories.reduce((acc, cat) => acc + (cat.children?.filter(sub => sub.hidden).length || 0), 0)
 
   return (
     <>
@@ -202,7 +228,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
               <View className="items-center py-8">
                 <Text className="text-sm text-gray-400">加载中...</Text>
               </View>
-            ) : categories.length === 0 ? (
+            ) : filteredCategories.length === 0 ? (
               <View className="items-center py-8">
                 <Folder size={40} color="#d1d5db" />
                 <Text className="block text-sm text-gray-400 mt-2">暂无分类</Text>
@@ -210,11 +236,15 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
             ) : (
               <ScrollView scrollY style={{ height: "50vh" }}>
                 <View className="gap-3">
-                  {categories.map((cat) => (
-                    <Card key={cat.id}>
+                  {filteredCategories.map((cat) => (
+                    <Card key={cat.id} className={cat.hidden ? "opacity-50" : ""}>
                       <CardContent className="p-3">
                         <View className="flex flex-row items-center justify-between">
                           <View className="flex flex-row items-center gap-2 flex-1">
+                            <Checkbox 
+                              checked={cat.hidden} 
+                              onCheckedChange={() => handleToggleHidden(cat)}
+                            />
                             <FolderOpen size={18} color="#3b82f6" />
                             <Text className="text-sm font-medium text-gray-800">{cat.name}</Text>
                           </View>
@@ -231,10 +261,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                               variant="outline"
                               onClick={() => openAddSubDialog(cat.id)}
                             >
-                              <View className="flex flex-row items-center gap-1">
-                                <Plus size={12} color="#3b82f6" />
-                                <Text className="text-xs text-blue-600">添加小类</Text>
-                              </View>
+                              <Plus size={12} color="#3b82f6" />
                             </Button>
                             <Button
                               size="sm"
@@ -248,9 +275,17 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                         {/* Sub categories */}
                         {cat.children && cat.children.length > 0 && (
                           <View className="mt-3 ml-6 gap-2">
-                            {cat.children.map((sub) => (
-                              <View key={sub.id} className="flex flex-row items-center justify-between">
-                                <Text className="text-sm text-gray-600">{sub.name}</Text>
+                            {cat.children
+                              .filter(sub => showHidden || !sub.hidden)
+                              .map((sub) => (
+                              <View key={sub.id} className={`flex flex-row items-center justify-between ${sub.hidden ? "opacity-50" : ""}`}>
+                                <View className="flex flex-row items-center gap-2">
+                                  <Checkbox 
+                                    checked={sub.hidden} 
+                                    onCheckedChange={() => handleToggleHidden(sub)}
+                                  />
+                                  <Text className="text-sm text-gray-600">{sub.name}</Text>
+                                </View>
                                 <View className="flex flex-row items-center gap-2">
                                   <Button
                                     size="sm"
@@ -279,6 +314,14 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
             )}
           </View>
           <DialogFooter>
+            {hiddenCount > 0 && (
+              <Button variant="outline" onClick={() => setShowHidden(!showHidden)}>
+                <View className="flex flex-row items-center gap-1">
+                  {showHidden ? <EyeOff size={14} color="#6b7280" /> : <Eye size={14} color="#6b7280" />}
+                  <Text className="text-gray-600">{showHidden ? "隐藏勾选" : "显示全部"}</Text>
+                </View>
+              </Button>
+            )}
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               <Text className="text-gray-600">关闭</Text>
             </Button>
@@ -348,7 +391,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
               确定要删除分类「{deletingCategory?.name}」吗？
             </Text>
             <Text className="text-xs text-gray-400 mt-2">
-              删除后仅影响后续的可选项，不影响已有的记录。
+              删除后仅影响后续的可选项，不影响之前的记录。
             </Text>
           </View>
           <DialogFooter>
