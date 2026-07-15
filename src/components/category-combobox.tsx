@@ -22,6 +22,7 @@ interface CategoryComboboxProps {
   type: 'work' | 'todo'
   parentId?: string | null
   label: string
+  onCategoryCreated?: () => void
 }
 
 export function CategoryCombobox({
@@ -32,6 +33,7 @@ export function CategoryCombobox({
   type,
   parentId = null,
   label,
+  onCategoryCreated,
 }: CategoryComboboxProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -59,6 +61,10 @@ export function CategoryCombobox({
       }
       setSearchText('')
       setIsOpen(false)
+      // Notify parent to refresh categories
+      if (onCategoryCreated) {
+        onCategoryCreated()
+      }
     } catch (e) {
       console.error('Failed to create category', e)
     }

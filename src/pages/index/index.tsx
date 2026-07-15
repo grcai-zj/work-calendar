@@ -5,9 +5,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Plus,
-  CircleCheck,
-  Circle,
-  CircleDot,
   Clock,
   Trash2,
   ListChecks,
@@ -29,6 +26,7 @@ import { Network } from '@/network'
 import { CategoryCombobox } from '@/components/category-combobox'
 import { DatePickerDialog } from '@/components/date-picker-dialog'
 import { SwipeableItem } from '@/components/swipeable-item'
+import { StatusIcon } from '@/components/status-icon'
 import './index.css'
 
 // ========== Types ==========
@@ -226,15 +224,20 @@ export default function Index() {
   const workSubCategories = selectedWorkCategory?.children || []
   const todoSubCategories = selectedTodoCategory?.children || []
 
-  // ========== Group todos by priority ==========
-  const groupedTodos = Object.entries(PRIORITY_MAP)
-    .sort(([, a], [, b]) => a.order - b.order)
-    .map(([key, config]) => ({
-      key,
-      ...config,
-      items: todos.filter(t => t.priority === key),
-    }))
-    .filter(g => g.items.length > 0)
+  // ========== Group todos by priority (only for incomplete) ==========
+  const incompleteTodos = todos.filter(t => t.status !== 'completed')
+  const completedTodos = todos.filter(t => t.status === 'completed')
+  
+  const groupedTodos = showCompleted
+    ? [{ key: 'completed', label: '已完成', color: 'text-gray-500', bgColor: 'bg-gray-50', order: 0, items: completedTodos }]
+    : Object.entries(PRIORITY_MAP)
+        .sort(([, a], [, b]) => a.order - b.order)
+        .map(([key, config]) => ({
+          key,
+          ...config,
+          items: incompleteTodos.filter(t => t.priority === key),
+        }))
+        .filter(g => g.items.length > 0)
 
   // ========== Work Record Actions ==========
   const handleAddWork = async () => {
@@ -420,14 +423,14 @@ export default function Index() {
     <ScrollView scrollY className="h-full bg-gray-50">
       <View className="min-h-full pb-8">
         {/* ===== Calendar Header ===== */}
-        <View className="bg-white px-4 pt-4 pb-2">
-          <View className="flex flex-row items-center justify-between mb-3">
-            <Text className="block text-xl font-bold text-gray-900">
+        <View className="bg-white px-4 pt-3 pb-1">
+          <View className="flex flex-row items-center justify-between mb-2">
+            <Text className="block text-base font-bold text-gray-900">
               {currentYear}年{currentMonth + 1}月
             </Text>
-            <View className="flex flex-row gap-2">
+            <View className="flex flex-row gap-1">
               <Button variant="outline" size="sm" onClick={prevMonth}>
-                <ChevronLeft size={18} color="#6b7280" />
+                <ChevronLeft size={16} color="#6b7280" />
               </Button>
               <Button
                 variant="outline"
@@ -442,7 +445,7 @@ export default function Index() {
                 <Text className="text-xs text-gray-600">今天</Text>
               </Button>
               <Button variant="outline" size="sm" onClick={nextMonth}>
-                <ChevronRight size={18} color="#6b7280" />
+                <ChevronRight size={16} color="#6b7280" />
               </Button>
             </View>
           </View>
@@ -472,12 +475,12 @@ export default function Index() {
                   onClick={() => setSelectedDate(dateStr)}
                 >
                   <View
-                    className={`w-8 h-8 rounded-full items-center justify-center ${
+                    className={`w-6 h-6 rounded-full items-center justify-center ${
                       isSelected ? 'bg-blue-600' : isToday ? 'bg-blue-100' : ''
                     }`}
                   >
                     <Text
-                      className={`block text-sm text-center ${
+                      className={`block text-xs text-center ${
                         isSelected ? 'text-white font-semibold' : isToday ? 'text-blue-600 font-medium' : 'text-gray-700'
                       }`}
                     >
@@ -630,12 +633,12 @@ export default function Index() {
                     <View className="flex flex-row items-center gap-1">
                       {showCompleted ? (
                         <>
-                          <Circle size={14} color="#6b7280" />
+                          <StatusIcon status="not_started" size={14} />
                           <Text className="text-xs text-gray-600">未完成</Text>
                         </>
                       ) : (
                         <>
-                          <CircleCheck size={14} color="#ffffff" />
+                          <StatusIcon status="completed" size={14} />
                           <Text className="text-xs text-white">已完成</Text>
                         </>
                       )}
@@ -702,14 +705,8 @@ export default function Index() {
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
-                                      <View className="pt-1" onClick={() => handleToggleStatus(todo)}>
-                                        {todo.status === 'completed' ? (
-                                          <CircleCheck size={20} color="#10b981" />
-                                        ) : todo.status === 'in_progress' ? (
-                                          <CircleDot size={20} color="#2563eb" />
-                                        ) : (
-                                          <Circle size={20} color="#9ca3af" />
-                                        )}
+                                      <View className="pt-1">
+                                        <StatusIcon status={todo.status} size={20} onClick={() => handleToggleStatus(todo)} />
                                       </View>
                                       {/* Content */}
                                       <View className="flex-1">
@@ -772,13 +769,7 @@ export default function Index() {
                                                 }
                                               >
                                                 <View className="flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
-                                                  <View onClick={() => handleToggleStatus(child)}>
-                                                    {child.status === 'completed' ? (
-                                                      <CircleCheck size={16} color="#10b981" />
-                                                    ) : (
-                                                      <Circle size={16} color="#9ca3af" />
-                                                    )}
-                                                  </View>
+                                                  <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
                                                   <Text
                                                     className={`block text-xs flex-1 ${
                                                       child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
