@@ -12,6 +12,7 @@ export interface Todo {
   status: string;
   parent_todo_id: string | null;
   hours: number | null;
+  completed_at: string | null;
   created_at: string;
   updated_at: string | null;
   category_name?: string;
@@ -37,7 +38,7 @@ export class TodosService {
   }): Promise<Todo[]> {
     let query = this.client
       .from('todos')
-      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
       .is('parent_todo_id', null); // 只查主待办
 
     if (filters.status) {
@@ -83,7 +84,7 @@ export class TodosService {
     if (todoIds.length > 0) {
       const { data: subItems, error: subError } = await this.client
         .from('todos')
-        .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, created_at, updated_at')
+        .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
         .in('parent_todo_id', todoIds)
         .order('created_at', { ascending: true });
       if (subError) throw new Error(`查询子项失败: ${subError.message}`);
@@ -106,7 +107,7 @@ export class TodosService {
   async findPendingByDeadline(deadline: string): Promise<Todo[]> {
     const { data, error } = await this.client
       .from('todos')
-      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
       .lte('deadline', deadline)
       .neq('status', 'completed')
       .is('parent_todo_id', null)
@@ -158,7 +159,7 @@ export class TodosService {
     const { data, error } = await this.client
       .from('todos')
       .insert(insertData)
-      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
       .single();
     if (error) throw new Error(`创建待办事项失败: ${error.message}`);
     return data as Todo;
@@ -182,7 +183,15 @@ export class TodosService {
     if (body.related_person !== undefined) updateData.related_person = body.related_person;
     if (body.priority !== undefined) updateData.priority = body.priority;
     if (body.deadline !== undefined) updateData.deadline = body.deadline;
-    if (body.status !== undefined) updateData.status = body.status;
+    if (body.status !== undefined) {
+      updateData.status = body.status;
+      // Set completed_at when status changes to completed
+      if (body.status === 'completed') {
+        updateData.completed_at = new Date().toISOString();
+      } else {
+        updateData.completed_at = null;
+      }
+    }
     if (body.hours !== undefined) updateData.hours = body.hours;
     updateData.updated_at = new Date().toISOString();
 
@@ -190,7 +199,7 @@ export class TodosService {
       .from('todos')
       .update(updateData)
       .eq('id', id)
-      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, completed_at, created_at, updated_at')
       .single();
     if (error) throw new Error(`更新待办事项失败: ${error.message}`);
     return data as Todo;

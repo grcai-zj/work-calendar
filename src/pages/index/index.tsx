@@ -10,7 +10,6 @@ import {
   CircleDot,
   Clock,
   Trash2,
-  Funnel,
   ListChecks,
   Briefcase,
   ChevronDown,
@@ -26,10 +25,10 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
-import { Separator } from '@/components/ui/separator'
 import { Network } from '@/network'
 import { CategoryCombobox } from '@/components/category-combobox'
 import { DatePickerDialog } from '@/components/date-picker-dialog'
+import { SwipeableItem } from '@/components/swipeable-item'
 import './index.css'
 
 // ========== Types ==========
@@ -65,6 +64,7 @@ interface TodoItem {
   status: string
   parent_todo_id: string | null
   hours: number | null
+  completed_at: string | null
   created_at: string
   category_name?: string
   sub_category_name?: string
@@ -74,17 +74,11 @@ interface TodoItem {
 // ========== Helpers ==========
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
 
-const PRIORITY_MAP: Record<string, { label: string; color: string; bgColor: string }> = {
-  urgent_important: { label: '重要紧急', color: 'text-red-600', bgColor: 'bg-red-50' },
-  important_not_urgent: { label: '重要不紧急', color: 'text-orange-600', bgColor: 'bg-orange-50' },
-  urgent_not_important: { label: '紧急不重要', color: 'text-yellow-600', bgColor: 'bg-yellow-50' },
-  not_urgent_not_important: { label: '不重要不紧急', color: 'text-green-600', bgColor: 'bg-green-50' },
-}
-
-const STATUS_MAP: Record<string, { label: string; color: string; bgColor: string }> = {
-  not_started: { label: '未开始', color: 'text-gray-500', bgColor: 'bg-gray-100' },
-  in_progress: { label: '进行中', color: 'text-blue-600', bgColor: 'bg-blue-50' },
-  completed: { label: '已完成', color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+const PRIORITY_MAP: Record<string, { label: string; color: string; bgColor: string; order: number }> = {
+  urgent_important: { label: '重要紧急', color: 'text-red-600', bgColor: 'bg-red-50', order: 1 },
+  important_not_urgent: { label: '重要不紧急', color: 'text-orange-600', bgColor: 'bg-orange-50', order: 2 },
+  urgent_not_important: { label: '紧急不重要', color: 'text-yellow-600', bgColor: 'bg-yellow-50', order: 3 },
+  not_urgent_not_important: { label: '不重要不紧急', color: 'text-green-600', bgColor: 'bg-green-50', order: 4 },
 }
 
 function formatDate(date: Date): string {
@@ -119,6 +113,7 @@ export default function Index() {
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [pendingTodos, setPendingTodos] = useState<TodoItem[]>([])
   const [showPendingTodos, setShowPendingTodos] = useState(true)
+  const [showCompleted, setShowCompleted] = useState(false)
 
   // Drawer states
   const [showAddWork, setShowAddWork] = useState(false)
@@ -136,13 +131,6 @@ export default function Index() {
 
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false)
-
-  // Filter states
-  const [showFilter, setShowFilter] = useState(false)
-  const [filterPriority, setFilterPriority] = useState('')
-  const [filterStatus, setFilterStatus] = useState('')
-  const [sortBy, setSortBy] = useState('created_at')
-  const [sortOrder, setSortOrder] = useState('desc')
 
   // Sub-item states
   const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set())
@@ -178,20 +166,15 @@ export default function Index() {
 
   const fetchTodos = useCallback(async () => {
     try {
-      let url = '/api/todos?'
-      const params: string[] = []
-      if (filterPriority) params.push(`priority=${filterPriority}`)
-      if (filterStatus) params.push(`status=${filterStatus}`)
-      if (sortBy) params.push(`sort_by=${sortBy}`)
-      if (sortOrder) params.push(`sort_order=${sortOrder}`)
-      url += params.join('&')
+      const status = showCompleted ? 'completed' : ''
+      const url = status ? `/api/todos?status=${status}` : '/api/todos'
       const res = await Network.request({ url })
       console.log('[API] todos:', res.data)
       setTodos(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch todos', e)
     }
-  }, [filterPriority, filterStatus, sortBy, sortOrder])
+  }, [showCompleted])
 
   const fetchPendingTodos = useCallback(async () => {
     try {
@@ -242,6 +225,16 @@ export default function Index() {
   const selectedTodoCategory = todoCategories.find(c => c.id === todoForm.category_id)
   const workSubCategories = selectedWorkCategory?.children || []
   const todoSubCategories = selectedTodoCategory?.children || []
+
+  // ========== Group todos by priority ==========
+  const groupedTodos = Object.entries(PRIORITY_MAP)
+    .sort(([, a], [, b]) => a.order - b.order)
+    .map(([key, config]) => ({
+      key,
+      ...config,
+      items: todos.filter(t => t.priority === key),
+    }))
+    .filter(g => g.items.length > 0)
 
   // ========== Work Record Actions ==========
   const handleAddWork = async () => {
@@ -316,8 +309,36 @@ export default function Index() {
     try {
       await Network.request({ url: `/api/todos/${todo.id}`, method: 'PUT', data: { status: nextStatus } })
       fetchTodos()
+      // If this is a sub-item, also update parent status
+      if (todo.parent_todo_id) {
+        await updateParentStatus(todo.parent_todo_id)
+      }
     } catch (e) {
       console.error('Failed to update todo status', e)
+    }
+  }
+
+  const updateParentStatus = async (parentId: string) => {
+    try {
+      // Fetch all sub-items of this parent
+      const res = await Network.request({ url: `/api/todos?status=` })
+      const allTodos = res.data?.data || []
+      const subItems = allTodos.filter((t: TodoItem) => t.parent_todo_id === parentId)
+      
+      // Check if all sub-items are completed
+      const allCompleted = subItems.every((t: TodoItem) => t.status === 'completed')
+      const anyCompleted = subItems.some((t: TodoItem) => t.status === 'completed')
+      
+      let newStatus = 'not_started'
+      if (allCompleted) {
+        newStatus = 'completed'
+      } else if (anyCompleted) {
+        newStatus = 'in_progress'
+      }
+      
+      await Network.request({ url: `/api/todos/${parentId}`, method: 'PUT', data: { status: newStatus } })
+    } catch (e) {
+      console.error('Failed to update parent status', e)
     }
   }
 
@@ -344,6 +365,10 @@ export default function Index() {
       setCompleteHours('')
       fetchTodos()
       fetchWorkRecords()
+      // If this is a sub-item, update parent status
+      if (completingTodo.parent_todo_id) {
+        await updateParentStatus(completingTodo.parent_todo_id)
+      }
     } catch (e) {
       console.error('Failed to complete todo', e)
       Taro.showToast({ title: '操作失败', icon: 'none' })
@@ -592,15 +617,28 @@ export default function Index() {
               </View>
             </TabsContent>
 
-            {/* ===== Todos Tab (Table Format) ===== */}
+            {/* ===== Todos Tab (Grouped by Priority) ===== */}
             <TabsContent value="todo">
               <View className="gap-3">
-                {/* Filter & Add */}
+                {/* Add button + Toggle completed */}
                 <View className="flex flex-row items-center gap-2">
-                  <Button variant="outline" size="sm" onClick={() => setShowFilter(!showFilter)}>
+                  <Button
+                    variant={showCompleted ? 'outline' : 'default'}
+                    size="sm"
+                    onClick={() => setShowCompleted(!showCompleted)}
+                  >
                     <View className="flex flex-row items-center gap-1">
-                      <Funnel size={14} color="#6b7280" />
-                      <Text className="text-xs text-gray-600">筛选</Text>
+                      {showCompleted ? (
+                        <>
+                          <Circle size={14} color="#6b7280" />
+                          <Text className="text-xs text-gray-600">未完成</Text>
+                        </>
+                      ) : (
+                        <>
+                          <CircleCheck size={14} color="#ffffff" />
+                          <Text className="text-xs text-white">已完成</Text>
+                        </>
+                      )}
                     </View>
                   </Button>
                   <View className="flex-1" />
@@ -612,216 +650,158 @@ export default function Index() {
                   </Button>
                 </View>
 
-                {/* Filter panel */}
-                {showFilter && (
-                  <Card className="mb-2">
-                    <CardContent className="p-3">
-                      <View className="gap-3">
-                        <View>
-                          <Text className="block text-xs text-gray-500 mb-1">优先级</Text>
-                          <View className="flex flex-row flex-wrap gap-2">
-                            {Object.entries(PRIORITY_MAP).map(([key, val]) => (
-                              <Badge
-                                key={key}
-                                variant={filterPriority === key ? 'default' : 'outline'}
-                                className={`${val.bgColor} ${val.color}`}
-                                onClick={() => setFilterPriority(filterPriority === key ? '' : key)}
-                              >
-                                <Text className="text-xs">{val.label}</Text>
-                              </Badge>
-                            ))}
-                          </View>
-                        </View>
-                        <Separator />
-                        <View>
-                          <Text className="block text-xs text-gray-500 mb-1">状态</Text>
-                          <View className="flex flex-row flex-wrap gap-2">
-                            {Object.entries(STATUS_MAP).map(([key, val]) => (
-                              <Badge
-                                key={key}
-                                variant={filterStatus === key ? 'default' : 'outline'}
-                                className={`${val.bgColor} ${val.color}`}
-                                onClick={() => setFilterStatus(filterStatus === key ? '' : key)}
-                              >
-                                <Text className="text-xs">{val.label}</Text>
-                              </Badge>
-                            ))}
-                          </View>
-                        </View>
-                        <Separator />
-                        <View>
-                          <Text className="block text-xs text-gray-500 mb-1">排序</Text>
-                          <View className="flex flex-row gap-2">
-                            <Badge
-                              variant={sortBy === 'priority' ? 'default' : 'outline'}
-                              onClick={() => setSortBy(sortBy === 'priority' ? 'created_at' : 'priority')}
-                            >
-                              <Text className="text-xs">按优先级</Text>
-                            </Badge>
-                            <Badge
-                              variant={sortBy === 'deadline' ? 'default' : 'outline'}
-                              onClick={() => setSortBy(sortBy === 'deadline' ? 'created_at' : 'deadline')}
-                            >
-                              <Text className="text-xs">按截止日</Text>
-                            </Badge>
-                            <Badge
-                              variant="outline"
-                              onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                            >
-                              <Text className="text-xs">{sortOrder === 'asc' ? '升序' : '降序'}</Text>
-                            </Badge>
-                          </View>
-                        </View>
-                      </View>
-                    </CardContent>
-                  </Card>
-                )}
-
-                {/* Todos Table */}
+                {/* Todos grouped by priority */}
                 {todos.length === 0 ? (
                   <View className="items-center py-8">
                     <ListChecks size={40} color="#d1d5db" />
-                    <Text className="block text-sm text-gray-400 mt-2">暂无待办事项</Text>
+                    <Text className="block text-sm text-gray-400 mt-2">
+                      {showCompleted ? '暂无已完成待办' : '暂无待办事项'}
+                    </Text>
                   </View>
                 ) : (
-                  <Card>
-                    <CardContent className="p-0">
-                      {/* Table Header */}
-                      <View className="flex flex-row items-center bg-gray-50 px-3 py-2 border-b border-gray-200">
-                        <View className="w-8" />
-                        <View className="flex-1">
-                          <Text className="block text-xs font-medium text-gray-500">内容</Text>
+                  <View className="gap-4">
+                    {groupedTodos.map((group) => (
+                      <View key={group.key}>
+                        {/* Priority group header */}
+                        <View className="flex flex-row items-center gap-2 mb-2 px-1">
+                          <View className={`w-2 h-2 rounded-full ${group.bgColor.replace('50', '500')}`} />
+                          <Text className={`block text-sm font-medium ${group.color}`}>{group.label}</Text>
+                          <Text className="block text-xs text-gray-400">({group.items.length})</Text>
                         </View>
-                        <View className="w-16 items-center">
-                          <Text className="block text-xs font-medium text-gray-500">优先级</Text>
-                        </View>
-                        <View className="w-20 items-center">
-                          <Text className="block text-xs font-medium text-gray-500">截止</Text>
-                        </View>
-                        <View className="w-16 items-center">
-                          <Text className="block text-xs font-medium text-gray-500">状态</Text>
-                        </View>
-                        <View className="w-16 items-center">
-                          <Text className="block text-xs font-medium text-gray-500">操作</Text>
-                        </View>
-                      </View>
 
-                      {/* Table Body */}
-                      {todos.map((todo) => {
-                        const pConfig = PRIORITY_MAP[todo.priority] || PRIORITY_MAP.urgent_important
-                        const sConfig = STATUS_MAP[todo.status] || STATUS_MAP.not_started
-                        const isExpanded = expandedTodos.has(todo.id)
-                        const hasChildren = todo.children && todo.children.length > 0
-                        return (
-                          <View key={todo.id}>
-                            {/* Main row */}
-                            <View className="flex flex-row items-center px-3 py-2 border-b border-gray-100">
-                              {/* Status toggle */}
-                              <View className="w-8" onClick={() => handleToggleStatus(todo)}>
-                                {todo.status === 'completed' ? (
-                                  <CircleCheck size={18} color="#10b981" />
-                                ) : todo.status === 'in_progress' ? (
-                                  <CircleDot size={18} color="#2563eb" />
-                                ) : (
-                                  <Circle size={18} color="#9ca3af" />
-                                )}
-                              </View>
-                              {/* Content */}
-                              <View className="flex-1">
-                                <Text
-                                  className={`block text-sm ${
-                                    todo.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
-                                  }`}
-                                >
-                                  {todo.content}
-                                </Text>
-                                <View className="flex flex-row items-center gap-2 mt-1">
-                                  {todo.category_name && (
-                                    <Text className="block text-xs text-gray-400">{todo.category_name}</Text>
-                                  )}
-                                  {todo.sub_category_name && (
-                                    <Text className="block text-xs text-gray-300">/ {todo.sub_category_name}</Text>
-                                  )}
-                                  {todo.related_person && (
-                                    <Text className="block text-xs text-gray-400">@{todo.related_person}</Text>
-                                  )}
-                                </View>
-                              </View>
-                              {/* Priority badge */}
-                              <View className="w-16 items-center">
-                                <Badge variant="outline" className={`${pConfig.bgColor} ${pConfig.color}`}>
-                                  <Text className="text-xs">{pConfig.label.slice(0, 2)}</Text>
-                                </Badge>
-                              </View>
-                              {/* Deadline */}
-                              <View className="w-20 items-center">
-                                <Text className="block text-xs text-gray-500 text-center">
-                                  {todo.deadline ? todo.deadline.slice(5) : '-'}
-                                </Text>
-                              </View>
-                              {/* Status */}
-                              <View className="w-16 items-center">
-                                <Badge variant="outline" className={`${sConfig.bgColor} ${sConfig.color}`}>
-                                  <Text className="text-xs">{sConfig.label}</Text>
-                                </Badge>
-                              </View>
-                              {/* Actions */}
-                              <View className="w-16 flex flex-row items-center justify-center gap-0.5">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSubItemParentId(todo.id)
-                                    setShowAddSubItem(true)
-                                  }}
-                                >
-                                  <Plus size={14} color="#6b7280" />
-                                </Button>
-                                <Button variant="ghost" size="sm" onClick={() => handleDeleteTodo(todo.id)}>
-                                  <Trash2 size={14} color="#9ca3af" />
-                                </Button>
-                              </View>
-                            </View>
-
-                            {/* Sub items (expandable) */}
-                            {hasChildren && (
-                              <View className="bg-gray-50 px-3 py-1 border-b border-gray-100">
-                                <View
-                                  className="flex flex-row items-center gap-1 py-1"
-                                  onClick={() => toggleExpand(todo.id)}
-                                >
-                                  {isExpanded ? <ChevronUp size={12} color="#6b7280" /> : <ChevronDown size={12} color="#6b7280" />}
-                                  <Text className="block text-xs text-gray-500">
-                                    子项 ({todo.children!.filter(c => c.status === 'completed').length}/{todo.children!.length})
-                                  </Text>
-                                </View>
-                                {isExpanded && (
-                                  <View className="ml-6 gap-1 pb-1">
-                                    {todo.children!.map((child) => (
-                                      <View key={child.id} className="flex flex-row items-center gap-2 py-1">
-                                        {child.status === 'completed' ? (
-                                          <CircleCheck size={14} color="#10b981" />
+                        {/* Todo items */}
+                        <View className="gap-2">
+                          {group.items.map((todo) => {
+                            const isExpanded = expandedTodos.has(todo.id)
+                            const hasChildren = todo.children && todo.children.length > 0
+                            const completedCount = todo.children?.filter(c => c.status === 'completed').length || 0
+                            return (
+                              <SwipeableItem
+                                key={todo.id}
+                                actions={
+                                  <View className="flex flex-row h-full">
+                                    <View
+                                      className="flex-1 bg-blue-500 items-center justify-center"
+                                      onClick={() => {
+                                        setSubItemParentId(todo.id)
+                                        setShowAddSubItem(true)
+                                      }}
+                                    >
+                                      <Plus size={18} color="#ffffff" />
+                                    </View>
+                                    <View
+                                      className="flex-1 bg-red-500 items-center justify-center"
+                                      onClick={() => handleDeleteTodo(todo.id)}
+                                    >
+                                      <Trash2 size={18} color="#ffffff" />
+                                    </View>
+                                  </View>
+                                }
+                              >
+                                <Card className="rounded-none">
+                                  <CardContent className="p-3">
+                                    <View className="flex flex-row items-start gap-2">
+                                      {/* Status icon */}
+                                      <View className="pt-1" onClick={() => handleToggleStatus(todo)}>
+                                        {todo.status === 'completed' ? (
+                                          <CircleCheck size={20} color="#10b981" />
+                                        ) : todo.status === 'in_progress' ? (
+                                          <CircleDot size={20} color="#2563eb" />
                                         ) : (
-                                          <Circle size={14} color="#9ca3af" />
+                                          <Circle size={20} color="#9ca3af" />
                                         )}
+                                      </View>
+                                      {/* Content */}
+                                      <View className="flex-1">
                                         <Text
-                                          className={`block text-xs flex-1 ${
-                                            child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
+                                          className={`block text-sm ${
+                                            todo.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
                                           }`}
                                         >
-                                          {child.content}
+                                          {todo.content}
                                         </Text>
+                                        <View className="flex flex-row items-center gap-2 mt-1 flex-wrap">
+                                          {todo.category_name && (
+                                            <Text className="block text-xs text-gray-400">{todo.category_name}</Text>
+                                          )}
+                                          {todo.sub_category_name && (
+                                            <Text className="block text-xs text-gray-300">/ {todo.sub_category_name}</Text>
+                                          )}
+                                          {todo.related_person && (
+                                            <Text className="block text-xs text-gray-400">@{todo.related_person}</Text>
+                                          )}
+                                          {/* Show deadline or completed_at */}
+                                          {showCompleted && todo.completed_at ? (
+                                            <Text className="block text-xs text-emerald-500">
+                                              完成: {todo.completed_at.slice(5, 10)}
+                                            </Text>
+                                          ) : todo.deadline ? (
+                                            <Text className="block text-xs text-gray-400">
+                                              截止: {todo.deadline.slice(5)}
+                                            </Text>
+                                          ) : null}
+                                        </View>
                                       </View>
-                                    ))}
-                                  </View>
-                                )}
-                              </View>
-                            )}
-                          </View>
-                        )
-                      })}
-                    </CardContent>
-                  </Card>
+                                    </View>
+
+                                    {/* Sub items section */}
+                                    {hasChildren && (
+                                      <View className="mt-2 pt-2 border-t border-gray-100">
+                                        <View
+                                          className="flex flex-row items-center gap-1"
+                                          onClick={() => toggleExpand(todo.id)}
+                                        >
+                                          {isExpanded ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
+                                          <Text className="block text-xs text-gray-500">
+                                            子项 ({completedCount}/{todo.children!.length})
+                                          </Text>
+                                        </View>
+                                        {isExpanded && (
+                                          <View className="mt-2 ml-4 gap-2">
+                                            {todo.children!.map((child) => (
+                                              <SwipeableItem
+                                                key={child.id}
+                                                actionWidth={60}
+                                                actions={
+                                                  <View
+                                                    className="flex-1 bg-red-500 h-full items-center justify-center"
+                                                    onClick={() => handleDeleteTodo(child.id)}
+                                                  >
+                                                    <Trash2 size={16} color="#ffffff" />
+                                                  </View>
+                                                }
+                                              >
+                                                <View className="flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
+                                                  <View onClick={() => handleToggleStatus(child)}>
+                                                    {child.status === 'completed' ? (
+                                                      <CircleCheck size={16} color="#10b981" />
+                                                    ) : (
+                                                      <Circle size={16} color="#9ca3af" />
+                                                    )}
+                                                  </View>
+                                                  <Text
+                                                    className={`block text-xs flex-1 ${
+                                                      child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
+                                                    }`}
+                                                  >
+                                                    {child.content}
+                                                  </Text>
+                                                </View>
+                                              </SwipeableItem>
+                                            ))}
+                                          </View>
+                                        )}
+                                      </View>
+                                    )}
+                                  </CardContent>
+                                </Card>
+                              </SwipeableItem>
+                            )
+                          })}
+                        </View>
+                      </View>
+                    ))}
+                  </View>
                 )}
               </View>
             </TabsContent>
@@ -836,7 +816,6 @@ export default function Index() {
             <DrawerTitle>记录工作内容</DrawerTitle>
           </DrawerHeader>
           <View className="px-4 gap-4">
-            {/* Category combobox */}
             <CategoryCombobox
               categories={workCategories}
               value={workForm.category_id}
@@ -845,8 +824,6 @@ export default function Index() {
               type="work"
               label="大类"
             />
-
-            {/* Sub category combobox - always visible */}
             <CategoryCombobox
               categories={workSubCategories}
               value={workForm.sub_category_id}
@@ -856,8 +833,6 @@ export default function Index() {
               parentId={workForm.category_id || undefined}
               label="小类"
             />
-
-            {/* Content - larger textarea */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>
               <View className="bg-gray-50 rounded-xl p-3">
@@ -870,8 +845,6 @@ export default function Index() {
                 />
               </View>
             </View>
-
-            {/* Hours input */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">耗时 (小时)</Text>
               <View className="bg-gray-50 rounded-xl px-4 py-2">
@@ -903,7 +876,6 @@ export default function Index() {
             <DrawerTitle>添加待办事项</DrawerTitle>
           </DrawerHeader>
           <View className="px-4 gap-4">
-            {/* Category combobox */}
             <CategoryCombobox
               categories={todoCategories}
               value={todoForm.category_id}
@@ -912,8 +884,6 @@ export default function Index() {
               type="todo"
               label="大类"
             />
-
-            {/* Sub category combobox - always visible */}
             <CategoryCombobox
               categories={todoSubCategories}
               value={todoForm.sub_category_id}
@@ -923,8 +893,6 @@ export default function Index() {
               parentId={todoForm.category_id || undefined}
               label="小类"
             />
-
-            {/* Content - larger textarea */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>
               <View className="bg-gray-50 rounded-xl p-3">
@@ -937,8 +905,6 @@ export default function Index() {
                 />
               </View>
             </View>
-
-            {/* Related person */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">相关人员</Text>
               <View className="bg-gray-50 rounded-xl px-4 py-2">
@@ -950,8 +916,6 @@ export default function Index() {
                 />
               </View>
             </View>
-
-            {/* Priority */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">优先级</Text>
               <Select value={todoForm.priority} onValueChange={(val) => setTodoForm({ ...todoForm, priority: val })}>
@@ -967,8 +931,6 @@ export default function Index() {
                 </SelectContent>
               </Select>
             </View>
-
-            {/* Deadline - date picker dialog */}
             <View>
               <Text className="block text-sm text-gray-600 mb-1">截止时间</Text>
               <View
