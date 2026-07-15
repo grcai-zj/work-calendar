@@ -263,14 +263,14 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => openAddSubDialog(cat.id)}
                             >
-                              <Plus size={12} color="#3b82f6" />
+                              <Plus size={14} color="#3b82f6" />
                             </Button>
                             <Button
                               size="sm"
-                              variant="outline"
+                              variant="ghost"
                               onClick={() => setDeletingCategory(cat)}
                             >
                               <Trash2 size={14} color="#ef4444" />
@@ -297,14 +297,14 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                                     variant="ghost"
                                     onClick={() => openEditDialog(sub)}
                                   >
-                                    <Pencil size={12} color="#3b82f6" />
+                                    <Pencil size={14} color="#3b82f6" />
                                   </Button>
                                   <Button
                                     size="sm"
                                     variant="ghost"
                                     onClick={() => setDeletingCategory(sub)}
                                   >
-                                    <Trash2 size={12} color="#ef4444" />
+                                    <Trash2 size={14} color="#ef4444" />
                                   </Button>
                                 </View>
                               </View>
