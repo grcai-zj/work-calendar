@@ -694,109 +694,113 @@ export default function Index() {
                             const hasChildren = todo.children && todo.children.length > 0
                             const completedCount = todo.children?.filter(c => c.status === 'completed').length || 0
                             return (
-                              <View key={todo.id} className="flex flex-row items-stretch gap-0">
-                                <Card className="flex-1 rounded-r-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
-                                  <CardContent className="p-3">
-                                    <View className="flex flex-row items-start gap-2">
-                                      {/* Status icon */}
-                                      <View className="pt-1" onClick={(e) => e.stopPropagation()}>
-                                        <StatusIcon status={todo.status} size={20} onClick={() => handleToggleStatus(todo)} />
-                                      </View>
-                                      {/* Content */}
-                                      <View className="flex-1">
-                                        <Text
-                                          className={`block text-sm ${
-                                            todo.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
-                                          }`}
-                                        >
-                                          {todo.content}
-                                        </Text>
-                                        <View className="flex flex-row items-center gap-2 mt-1 flex-wrap">
-                                          {todo.category_name && (
-                                            <Text className="block text-xs text-gray-400">{todo.category_name}</Text>
-                                          )}
-                                          {todo.sub_category_name && (
-                                            <Text className="block text-xs text-gray-300">/ {todo.sub_category_name}</Text>
-                                          )}
-                                          {todo.related_person && (
-                                            <Text className="block text-xs text-gray-400">@{todo.related_person}</Text>
-                                          )}
-                                          {/* Show deadline or completed_at */}
-                                          {showCompleted && todo.completed_at ? (
-                                            <Text className="block text-xs text-emerald-500">
-                                              完成: {todo.completed_at.slice(5, 10)}
-                                            </Text>
-                                          ) : todo.deadline ? (
-                                            <Text className="block text-xs text-gray-400">
-                                              截止: {todo.deadline.slice(5)}
-                                            </Text>
-                                          ) : null}
+                              <View key={todo.id}>
+                                {/* Parent todo row - buttons only cover parent height */}
+                                <View className="flex flex-row items-stretch gap-0">
+                                  <Card className="flex-1 rounded-r-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
+                                    <CardContent className="p-3">
+                                      <View className="flex flex-row items-start gap-2">
+                                        {/* Status icon */}
+                                        <View className="pt-1" onClick={(e) => e.stopPropagation()}>
+                                          <StatusIcon status={todo.status} size={20} onClick={() => handleToggleStatus(todo)} />
                                         </View>
-                                      </View>
-                                    </View>
-
-                                    {/* Sub items section */}
-                                    {hasChildren && (
-                                      <View className="mt-2 pt-2 border-t border-gray-100">
-                                        <View
-                                          className="flex flex-row items-center gap-1"
-                                          onClick={(e) => {
-                                            e.stopPropagation()
-                                            toggleExpand(todo.id)
-                                          }}
-                                        >
-                                          {isExpanded ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
-                                          <Text className="block text-xs text-gray-500">
-                                            子项 ({completedCount}/{todo.children!.length})
+                                        {/* Content */}
+                                        <View className="flex-1">
+                                          <Text
+                                            className={`block text-sm ${
+                                              todo.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-700'
+                                            }`}
+                                          >
+                                            {todo.content}
                                           </Text>
-                                        </View>
-                                        {isExpanded && (
-                                          <View className="mt-2 ml-4 gap-2">
-                                            {todo.children!.map((child) => (
-                                              <View key={child.id} className="flex flex-row items-center gap-2">
-                                                  <View className="flex-1 flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
-                                                  <View onClick={(e) => e.stopPropagation()}>
-                                                    <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
-                                                  </View>
-                                                  <Text
-                                                    className={`block text-xs flex-1 ${
-                                                      child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
-                                                    }`}
-                                                  >
-                                                    {child.content}
-                                                  </Text>
-                                                  </View>
-                                                  <View
-                                                    className="w-8 h-8 bg-gray-100 border border-gray-200 rounded flex items-center justify-center"
-                                                    onClick={() => handleDeleteTodo(child.id)}
-                                                  >
-                                                    <Text className="text-gray-400 text-sm">-</Text>
-                                                  </View>
-                                                </View>
-                                            ))}
+                                          <View className="flex flex-row items-center gap-2 mt-1 flex-wrap">
+                                            {todo.category_name && (
+                                              <Text className="block text-xs text-gray-400">{todo.category_name}</Text>
+                                            )}
+                                            {todo.sub_category_name && (
+                                              <Text className="block text-xs text-gray-300">/ {todo.sub_category_name}</Text>
+                                            )}
+                                            {todo.related_person && (
+                                              <Text className="block text-xs text-gray-400">@{todo.related_person}</Text>
+                                            )}
+                                            {/* Show deadline or completed_at */}
+                                            {showCompleted && todo.completed_at ? (
+                                              <Text className="block text-xs text-emerald-500">
+                                                完成: {todo.completed_at.slice(5, 10)}
+                                              </Text>
+                                            ) : todo.deadline ? (
+                                              <Text className="block text-xs text-gray-400">
+                                                截止: {todo.deadline.slice(5)}
+                                              </Text>
+                                            ) : null}
                                           </View>
-                                        )}
+                                        </View>
                                       </View>
-                                    )}
-                                  </CardContent>
-                                </Card>
-                                <View className="flex flex-col border border-gray-200 border-l-0 rounded-r-lg overflow-hidden">
-                                  <View
-                                    className="flex-1 bg-gray-100 flex items-center justify-center border-b border-gray-200"
-                                    onClick={() => {
-                                      setSubItemParentId(todo.id)
-                                      setShowAddSubItem(true)
-                                    }}
-                                  >
-                                    <Text className="text-gray-400 text-lg">+</Text>
-                                  </View>
-                                  <View
-                                    className="flex-1 bg-gray-100 flex items-center justify-center"
-                                    onClick={() => handleDeleteTodo(todo.id)}
-                                  >
-                                    <Text className="text-gray-400 text-lg">-</Text>
+                                    </CardContent>
+                                  </Card>
+                                  {/* Action buttons - width doubled to w-16 */}
+                                  <View className="w-16 flex flex-col border border-gray-200 border-l-0 rounded-r-lg overflow-hidden">
+                                    <View
+                                      className="flex-1 bg-gray-100 flex items-center justify-center border-b border-gray-200"
+                                      onClick={() => {
+                                        setSubItemParentId(todo.id)
+                                        setShowAddSubItem(true)
+                                      }}
+                                    >
+                                      <Text className="text-gray-400 text-lg">+</Text>
+                                    </View>
+                                    <View
+                                      className="flex-1 bg-gray-100 flex items-center justify-center"
+                                      onClick={() => handleDeleteTodo(todo.id)}
+                                    >
+                                      <Text className="text-gray-400 text-lg">-</Text>
+                                    </View>
                                   </View>
                                 </View>
+
+                                {/* Sub items section - separate from parent buttons */}
+                                {hasChildren && (
+                                  <View className="mt-2 ml-4">
+                                    <View
+                                      className="flex flex-row items-center gap-1 py-1"
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        toggleExpand(todo.id)
+                                      }}
+                                    >
+                                      {isExpanded ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
+                                      <Text className="block text-xs text-gray-500">
+                                        子项 ({completedCount}/{todo.children!.length})
+                                      </Text>
+                                    </View>
+                                    {isExpanded && (
+                                      <View className="gap-2">
+                                        {todo.children!.map((child) => (
+                                          <View key={child.id} className="flex flex-row items-stretch gap-0">
+                                            <View className="flex-1 flex flex-row items-center gap-2 py-2 px-3 bg-gray-50 rounded-l-lg">
+                                              <View onClick={(e) => e.stopPropagation()}>
+                                                <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
+                                              </View>
+                                              <Text
+                                                className={`block text-xs flex-1 ${
+                                                  child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
+                                                }`}
+                                              >
+                                                {child.content}
+                                              </Text>
+                                            </View>
+                                            <View
+                                              className="w-16 flex items-center justify-center bg-gray-100 border border-gray-200 rounded-r-lg"
+                                              onClick={() => handleDeleteTodo(child.id)}
+                                            >
+                                              <Text className="text-gray-400 text-sm">-</Text>
+                                            </View>
+                                          </View>
+                                        ))}
+                                      </View>
+                                    )}
+                                  </View>
+                                )}
                               </View>
                             )
                           })}
