@@ -557,7 +557,7 @@ export default function Index() {
                     }`}
                   >
                     <Text
-                      className={`block text-xs text-center ${
+                      className={`block text-xs text-center leading-none ${
                         isSelected ? 'text-white font-semibold' : isToday ? 'text-blue-600 font-medium' : 'text-gray-700'
                       }`}
                     >
