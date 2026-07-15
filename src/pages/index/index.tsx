@@ -696,9 +696,10 @@ export default function Index() {
                               <SwipeableItem
                                 key={todo.id}
                                 actions={
-                                  <View className="flex flex-row h-full items-stretch">
+                                  <View className="flex flex-row h-full items-stretch justify-end">
                                     <View
-                                      className="h-full flex-1 bg-blue-500 flex items-center justify-center"
+                                      className="h-full bg-blue-500 flex items-center justify-center"
+                                      style={{ width: '70px' }}
                                       onClick={() => {
                                         setSubItemParentId(todo.id)
                                         setShowAddSubItem(true)
@@ -707,7 +708,8 @@ export default function Index() {
                                       <Plus size={20} color="#ffffff" />
                                     </View>
                                     <View
-                                      className="h-full flex-1 bg-red-500 flex items-center justify-center"
+                                      className="h-full bg-red-500 flex items-center justify-center"
+                                      style={{ width: '70px' }}
                                       onClick={() => handleDeleteTodo(todo.id)}
                                     >
                                       <Trash2 size={20} color="#ffffff" />
@@ -777,7 +779,7 @@ export default function Index() {
                                                 key={child.id}
                                                 actionWidth={70}
                                                 actions={
-                                                  <View className="h-full flex-1 bg-red-500 flex items-center justify-center" onClick={() => handleDeleteTodo(child.id)}>
+                                                  <View className="h-full bg-red-500 flex items-center justify-center" style={{ width: '70px' }} onClick={() => handleDeleteTodo(child.id)}>
                                                     <Trash2 size={18} color="#ffffff" />
                                                   </View>
                                                 }
