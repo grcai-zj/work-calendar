@@ -682,10 +682,14 @@ export default function Index() {
                       </Text>
                     </View>
                   </Button>
-                  <Button size="sm" onClick={() => setShowAddTodo(true)}>
+                  <Button 
+                    variant="outline" 
+                    className="w-full border-dashed border-gray-300"
+                    onClick={() => setShowAddTodo(true)}
+                  >
                     <View className="flex flex-row items-center gap-1">
-                      <Plus size={14} color="#ffffff" />
-                      <Text className="text-xs text-white">添加待办</Text>
+                      <Plus size={16} color="#6b7280" />
+                      <Text className="text-sm text-gray-500">添加待办</Text>
                     </View>
                   </Button>
                 </View>
