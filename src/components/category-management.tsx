@@ -255,25 +255,28 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                           </View>
                           <View className="flex flex-row items-center gap-0">
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
+                              className="h-7 w-7"
                               onClick={() => openEditDialog(cat)}
                             >
-                              <Pencil size={14} color="#3b82f6" />
+                              <Pencil size={12} color="#3b82f6" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
+                              className="h-7 w-7"
                               onClick={() => openAddSubDialog(cat.id)}
                             >
-                              <Plus size={14} color="#3b82f6" />
+                              <Plus size={12} color="#3b82f6" />
                             </Button>
                             <Button
-                              size="sm"
+                              size="icon"
                               variant="ghost"
+                              className="h-7 w-7"
                               onClick={() => setDeletingCategory(cat)}
                             >
-                              <Trash2 size={14} color="#ef4444" />
+                              <Trash2 size={12} color="#ef4444" />
                             </Button>
                           </View>
                         </View>
@@ -293,18 +296,20 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                                 </View>
                                 <View className="flex flex-row items-center gap-0">
                                   <Button
-                                    size="sm"
+                                    size="icon"
                                     variant="ghost"
+                                    className="h-7 w-7"
                                     onClick={() => openEditDialog(sub)}
                                   >
-                                    <Pencil size={14} color="#3b82f6" />
+                                    <Pencil size={12} color="#3b82f6" />
                                   </Button>
                                   <Button
-                                    size="sm"
+                                    size="icon"
                                     variant="ghost"
+                                    className="h-7 w-7"
                                     onClick={() => setDeletingCategory(sub)}
                                   >
-                                    <Trash2 size={14} color="#ef4444" />
+                                    <Trash2 size={12} color="#ef4444" />
                                   </Button>
                                 </View>
                               </View>
