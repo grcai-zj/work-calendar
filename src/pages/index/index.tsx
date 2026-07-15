@@ -578,7 +578,7 @@ export default function Index() {
 
           {/* ===== Tabs: Work / Todo ===== */}
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 mb-3">
+            <TabsList className="grid grid-cols-2 mb-1">
               <TabsTrigger value="work">
                 <View className="flex flex-row items-center gap-1">
                   <Briefcase size={14} color={activeTab === 'work' ? '#2563eb' : '#6b7280'} />
