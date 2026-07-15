@@ -790,7 +790,10 @@ export default function Index() {
                                       <View className="gap-3">
                                         {todo.children!.map((child) => (
                                           <View key={child.id} className="flex flex-row items-stretch gap-0">
-                                            <View className="flex-1 flex flex-row items-center gap-2 py-2 px-3 bg-gray-50 rounded-l-lg">
+                                            <View 
+                                              className="flex-1 flex flex-row items-center gap-2 py-2 px-3 bg-gray-50 rounded-l-lg"
+                                              onClick={() => { setEditingTodo(child); setShowAddTodo(true) }}
+                                            >
                                               <View onClick={(e) => e.stopPropagation()}>
                                                 <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
                                               </View>
