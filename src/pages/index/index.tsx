@@ -12,6 +12,7 @@ import {
   ChevronDown,
   ChevronUp,
   Calendar,
+  Folder,
 } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -27,6 +28,7 @@ import { CategoryCombobox } from '@/components/category-combobox'
 import { DatePickerDialog } from '@/components/date-picker-dialog'
 import { SwipeableItem } from '@/components/swipeable-item'
 import { StatusIcon } from '@/components/status-icon'
+import { CategoryManagement } from '@/components/category-management'
 import './index.css'
 
 // ========== Types ==========
@@ -111,6 +113,9 @@ export default function Index() {
   const [pendingTodos, setPendingTodos] = useState<TodoItem[]>([])
   const [showPendingTodos, setShowPendingTodos] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
+  const [showCategoryManagement, setShowCategoryManagement] = useState(false)
+  const [completedPage, setCompletedPage] = useState(1)
+  const COMPLETED_PAGE_SIZE = 10
 
   // Drawer states
   const [showAddWork, setShowAddWork] = useState(false)
@@ -222,9 +227,11 @@ export default function Index() {
   // ========== Group todos by priority (only for incomplete) ==========
   const incompleteTodos = todos.filter(t => t.status !== 'completed')
   const completedTodos = todos.filter(t => t.status === 'completed')
+  const paginatedCompletedTodos = completedTodos.slice(0, completedPage * COMPLETED_PAGE_SIZE)
+  const hasMoreCompleted = completedTodos.length > completedPage * COMPLETED_PAGE_SIZE
   
   const groupedTodos = showCompleted
-    ? [{ key: 'completed', label: '已完成', color: 'text-gray-500', bgColor: 'bg-gray-50', order: 0, items: completedTodos }]
+    ? [{ key: 'completed', label: '已完成', color: 'text-gray-500', bgColor: 'bg-gray-50', order: 0, items: paginatedCompletedTodos }]
     : Object.entries(PRIORITY_MAP)
         .sort(([, a], [, b]) => a.order - b.order)
         .map(([key, config]) => ({
@@ -618,28 +625,34 @@ export default function Index() {
             {/* ===== Todos Tab (Grouped by Priority) ===== */}
             <TabsContent value="todo">
               <View className="gap-3">
-                {/* Add button + Toggle completed */}
+                {/* Add button + Toggle completed + Category management */}
                 <View className="flex flex-row items-center gap-2">
                   <Button
-                    variant={showCompleted ? 'outline' : 'default'}
+                    variant="outline"
                     size="sm"
-                    onClick={() => setShowCompleted(!showCompleted)}
+                    onClick={() => setShowCategoryManagement(true)}
                   >
                     <View className="flex flex-row items-center gap-1">
-                      {showCompleted ? (
-                        <>
-                          <StatusIcon status="not_started" size={14} />
-                          <Text className="text-xs text-gray-600">未完成</Text>
-                        </>
-                      ) : (
-                        <>
-                          <StatusIcon status="completed" size={14} />
-                          <Text className="text-xs text-white">已完成</Text>
-                        </>
-                      )}
+                      <Folder size={14} color="#6b7280" />
+                      <Text className="text-xs text-gray-600">分类管理</Text>
                     </View>
                   </Button>
                   <View className="flex-1" />
+                  <Button
+                    variant={showCompleted ? 'default' : 'outline'}
+                    size="sm"
+                    onClick={() => {
+                      setShowCompleted(!showCompleted)
+                      if (!showCompleted) setCompletedPage(1)
+                    }}
+                  >
+                    <View className="flex flex-row items-center gap-1">
+                      <StatusIcon status={showCompleted ? 'completed' : 'not_started'} size={14} />
+                      <Text className={`text-xs ${showCompleted ? 'text-white' : 'text-gray-600'}`}>
+                        {showCompleted ? '已完成' : '未完成'}
+                      </Text>
+                    </View>
+                  </Button>
                   <Button size="sm" onClick={() => setShowAddTodo(true)}>
                     <View className="flex flex-row items-center gap-1">
                       <Plus size={14} color="#ffffff" />
@@ -785,6 +798,16 @@ export default function Index() {
                             )
                           })}
                         </View>
+                        {/* Load more button for completed todos */}
+                        {showCompleted && hasMoreCompleted && (
+                          <Button
+                            variant="outline"
+                            className="mt-2"
+                            onClick={() => setCompletedPage(p => p + 1)}
+                          >
+                            <Text className="text-sm text-gray-600">加载更多 (还有 {completedTodos.length - completedPage * COMPLETED_PAGE_SIZE} 条)</Text>
+                          </Button>
+                        )}
                       </View>
                     ))}
                   </View>
@@ -1020,6 +1043,13 @@ export default function Index() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ===== Category Management ===== */}
+      <CategoryManagement
+        open={showCategoryManagement}
+        onOpenChange={setShowCategoryManagement}
+        onCategoriesChanged={() => fetchCategories()}
+      />
     </ScrollView>
   )
 }

@@ -1,0 +1,254 @@
+import { useState, useEffect } from 'react'
+import { View, Text, ScrollView } from '@tarojs/components'
+import { Plus, Trash2, Folder, FolderOpen } from 'lucide-react-taro'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { Network } from '@/network'
+
+interface CategoryItem {
+  id: string
+  parent_id: string | null
+  name: string
+  type: string
+  level: number
+  children?: CategoryItem[]
+}
+
+interface CategoryManagementProps {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onCategoriesChanged: () => void
+}
+
+export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: CategoryManagementProps) {
+  const [categories, setCategories] = useState<CategoryItem[]>([])
+  const [loading, setLoading] = useState(false)
+  const [newCategoryName, setNewCategoryName] = useState('')
+  const [newSubCategoryName, setNewSubCategoryName] = useState('')
+  const [selectedParentId, setSelectedParentId] = useState<string | null>(null)
+  const [showAddSubDialog, setShowAddSubDialog] = useState(false)
+  const [deletingCategory, setDeletingCategory] = useState<CategoryItem | null>(null)
+
+  const fetchCategories = async () => {
+    setLoading(true)
+    try {
+      const res = await Network.request({ url: '/api/categories/tree' })
+      setCategories(res.data?.data || [])
+    } catch (e) {
+      console.error('Failed to fetch categories', e)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    if (open) {
+      fetchCategories()
+    }
+  }, [open])
+
+  const handleAddCategory = async () => {
+    if (!newCategoryName.trim()) return
+    try {
+      await Network.request({
+        url: '/api/categories',
+        method: 'POST',
+        data: { name: newCategoryName.trim(), type: 'shared' },
+      })
+      setNewCategoryName('')
+      await fetchCategories()
+      onCategoriesChanged()
+    } catch (e) {
+      console.error('Failed to add category', e)
+    }
+  }
+
+  const handleAddSubCategory = async () => {
+    if (!newSubCategoryName.trim() || !selectedParentId) return
+    try {
+      await Network.request({
+        url: '/api/categories',
+        method: 'POST',
+        data: { name: newSubCategoryName.trim(), type: 'shared', parent_id: selectedParentId },
+      })
+      setNewSubCategoryName('')
+      setSelectedParentId(null)
+      setShowAddSubDialog(false)
+      await fetchCategories()
+      onCategoriesChanged()
+    } catch (e) {
+      console.error('Failed to add sub category', e)
+    }
+  }
+
+  const handleDeleteCategory = async () => {
+    if (!deletingCategory) return
+    try {
+      await Network.request({
+        url: `/api/categories/${deletingCategory.id}`,
+        method: 'DELETE',
+      })
+      setDeletingCategory(null)
+      await fetchCategories()
+      onCategoriesChanged()
+    } catch (e) {
+      console.error('Failed to delete category', e)
+    }
+  }
+
+  const openAddSubDialog = (parentId: string) => {
+    setSelectedParentId(parentId)
+    setShowAddSubDialog(true)
+  }
+
+  return (
+    <>
+      <Dialog open={open} onOpenChange={onOpenChange}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>分类管理</DialogTitle>
+          </DialogHeader>
+          <View className="py-4">
+            {/* Add new category */}
+            <View className="flex flex-row items-center gap-2 mb-4">
+              <View className="flex-1">
+                <Input
+                  placeholder="输入大类名称"
+                  value={newCategoryName}
+                  onInput={(e) => setNewCategoryName(e.detail.value)}
+                />
+              </View>
+              <Button size="sm" onClick={handleAddCategory} disabled={!newCategoryName.trim()}>
+                <View className="flex flex-row items-center gap-1">
+                  <Plus size={14} color="#ffffff" />
+                  <Text className="text-xs text-white">添加大类</Text>
+                </View>
+              </Button>
+            </View>
+
+            {/* Category list */}
+            {loading ? (
+              <View className="items-center py-8">
+                <Text className="text-sm text-gray-400">加载中...</Text>
+              </View>
+            ) : categories.length === 0 ? (
+              <View className="items-center py-8">
+                <Folder size={40} color="#d1d5db" />
+                <Text className="block text-sm text-gray-400 mt-2">暂无分类</Text>
+              </View>
+            ) : (
+              <ScrollView className="max-h-96">
+                <View className="gap-3">
+                  {categories.map((cat) => (
+                    <Card key={cat.id}>
+                      <CardContent className="p-3">
+                        <View className="flex flex-row items-center justify-between">
+                          <View className="flex flex-row items-center gap-2 flex-1">
+                            <FolderOpen size={18} color="#3b82f6" />
+                            <Text className="text-sm font-medium text-gray-800">{cat.name}</Text>
+                          </View>
+                          <View className="flex flex-row items-center gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => openAddSubDialog(cat.id)}
+                            >
+                              <View className="flex flex-row items-center gap-1">
+                                <Plus size={12} color="#3b82f6" />
+                                <Text className="text-xs text-blue-600">添加小类</Text>
+                              </View>
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setDeletingCategory(cat)}
+                            >
+                              <Trash2 size={14} color="#ef4444" />
+                            </Button>
+                          </View>
+                        </View>
+                        {/* Sub categories */}
+                        {cat.children && cat.children.length > 0 && (
+                          <View className="mt-3 ml-6 gap-2">
+                            {cat.children.map((sub) => (
+                              <View key={sub.id} className="flex flex-row items-center justify-between">
+                                <Text className="text-sm text-gray-600">{sub.name}</Text>
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  onClick={() => setDeletingCategory(sub)}
+                                >
+                                  <Trash2 size={12} color="#ef4444" />
+                                </Button>
+                              </View>
+                            ))}
+                          </View>
+                        )}
+                      </CardContent>
+                    </Card>
+                  ))}
+                </View>
+              </ScrollView>
+            )}
+          </View>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>
+              <Text className="text-gray-600">关闭</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add sub category dialog */}
+      <Dialog open={showAddSubDialog} onOpenChange={setShowAddSubDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>添加小类</DialogTitle>
+          </DialogHeader>
+          <View className="py-4">
+            <Input
+              placeholder="输入小类名称"
+              value={newSubCategoryName}
+              onInput={(e) => setNewSubCategoryName(e.detail.value)}
+            />
+          </View>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowAddSubDialog(false)}>
+              <Text className="text-gray-600">取消</Text>
+            </Button>
+            <Button onClick={handleAddSubCategory} disabled={!newSubCategoryName.trim()}>
+              <Text className="text-white">添加</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete confirmation dialog */}
+      <Dialog open={!!deletingCategory} onOpenChange={() => setDeletingCategory(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>确认删除</DialogTitle>
+          </DialogHeader>
+          <View className="py-4">
+            <Text className="text-sm text-gray-600">
+              确定要删除分类「{deletingCategory?.name}」吗？
+            </Text>
+            <Text className="text-xs text-gray-400 mt-2">
+              删除后仅影响后续的可选项，不影响已有的记录。
+            </Text>
+          </View>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeletingCategory(null)}>
+              <Text className="text-gray-600">取消</Text>
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteCategory}>
+              <Text className="text-white">删除</Text>
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
+}
