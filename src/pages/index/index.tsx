@@ -775,7 +775,7 @@ export default function Index() {
                                             {todo.children!.map((child) => (
                                               <SwipeableItem
                                                 key={child.id}
-                                                actionWidth={35}
+                                                actionWidth={70}
                                                 actions={
                                                   <View className="h-full flex-1 bg-red-500 flex items-center justify-center" onClick={() => handleDeleteTodo(child.id)}>
                                                     <Trash2 size={18} color="#ffffff" />
