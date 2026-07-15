@@ -971,7 +971,9 @@ export default function Index() {
               <Text className="block text-sm text-gray-600 mb-1">优先级</Text>
               <Select value={todoForm.priority} onValueChange={(val) => setTodoForm({ ...todoForm, priority: val })}>
                 <SelectTrigger>
-                  <SelectValue placeholder="选择优先级" />
+                  <SelectValue placeholder="选择优先级">
+                    {todoForm.priority ? PRIORITY_MAP[todoForm.priority]?.label : null}
+                  </SelectValue>
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(PRIORITY_MAP).map(([key, val]) => (
