@@ -1,1 +1,7 @@
-/* 优先使用 tailwindcss，如无必要请不要使用css */
+.calendar-cell {
+  width: 14.28%;
+  height: 2.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
