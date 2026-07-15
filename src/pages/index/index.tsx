@@ -595,7 +595,7 @@ export default function Index() {
 
             {/* ===== Work Records Tab ===== */}
             <TabsContent value="work">
-              <View className="gap-3">
+              <View className="gap-1">
                 <View className="flex flex-row justify-end">
                   <Button
                     variant="outline"
@@ -662,7 +662,7 @@ export default function Index() {
 
             {/* ===== Todos Tab (Grouped by Priority) ===== */}
             <TabsContent value="todo">
-              <View className="gap-3">
+              <View className="gap-1">
                 {/* Add button + Toggle completed */}
                 <View className="flex flex-row items-center justify-between gap-2">
                   <Button
