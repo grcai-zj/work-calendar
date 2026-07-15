@@ -110,8 +110,6 @@ export default function Index() {
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
-  const [pendingTodos, setPendingTodos] = useState<TodoItem[]>([])
-  const [showPendingTodos, setShowPendingTodos] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
   const [showCategoryManagement, setShowCategoryManagement] = useState(false)
   const [editingWork, setEditingWork] = useState<WorkRecord | null>(null)
@@ -208,15 +206,6 @@ export default function Index() {
     }
   }, [showCompleted])
 
-  const fetchPendingTodos = useCallback(async () => {
-    try {
-      const res = await Network.request({ url: `/api/todos/pending?deadline=${selectedDate}` })
-      console.log('[API] pending todos:', res.data)
-      setPendingTodos(res.data?.data || [])
-    } catch (e) {
-      console.error('Failed to fetch pending todos', e)
-    }
-  }, [selectedDate])
 
   useEffect(() => {
     fetchCategories()
@@ -224,8 +213,8 @@ export default function Index() {
 
   useEffect(() => {
     fetchWorkRecords()
-    fetchPendingTodos()
-  }, [fetchWorkRecords, fetchPendingTodos])
+    
+  }, [fetchWorkRecords])
 
   useEffect(() => {
     if (activeTab === 'todo') fetchTodos()
@@ -552,46 +541,6 @@ export default function Index() {
             })}
           </View>
         </View>
-
-        {/* ===== Pending Todos (collapsible) ===== */}
-        {pendingTodos.length > 0 && (
-          <View className="mx-4 mt-3">
-            <Card>
-              <CardContent className="p-3">
-                <View
-                  className="flex flex-row items-center justify-between"
-                  onClick={() => setShowPendingTodos(!showPendingTodos)}
-                >
-                  <View className="flex flex-row items-center gap-2">
-                    <ListChecks size={16} color="#2563eb" />
-                    <Text className="block text-sm font-medium text-gray-900">
-                      截止今日未完成 ({pendingTodos.length})
-                    </Text>
-                  </View>
-                  {showPendingTodos ? <ChevronUp size={16} color="#6b7280" /> : <ChevronDown size={16} color="#6b7280" />}
-                </View>
-                {showPendingTodos && (
-                  <View className="mt-2 gap-2">
-                    {pendingTodos.map((todo) => {
-                      const pConfig = PRIORITY_MAP[todo.priority] || PRIORITY_MAP.urgent_important
-                      return (
-                        <View key={todo.id} className="flex flex-row items-center gap-2 py-1">
-                          <Badge variant="outline" className={`${pConfig.bgColor} ${pConfig.color} text-xs`}>
-                            <Text className="text-xs">{pConfig.label}</Text>
-                          </Badge>
-                          <Text className="block flex-1 text-sm text-gray-700 truncate">{todo.content}</Text>
-                          {todo.deadline && (
-                            <Text className="block text-xs text-gray-400">{todo.deadline.slice(5)}</Text>
-                          )}
-                        </View>
-                      )
-                    })}
-                  </View>
-                )}
-              </CardContent>
-            </Card>
-          </View>
-        )}
 
         {/* ===== Selected Date Info ===== */}
         <View className="mx-4 mt-3">
