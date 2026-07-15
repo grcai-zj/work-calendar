@@ -502,14 +502,6 @@ export default function Index() {
         {/* ===== Calendar Header ===== */}
         <View className="bg-white px-4 pt-3 pb-1">
           <View className="flex flex-row items-center justify-between mb-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7"
-              onClick={() => setShowCategoryManagement(true)}
-            >
-              <Folder size={14} color="#6b7280" />
-            </Button>
             <Text className="block text-base font-bold text-gray-900">
               {currentYear}年{currentMonth + 1}月
             </Text>
@@ -570,10 +562,20 @@ export default function Index() {
 
         {/* ===== Selected Date Info ===== */}
         <View className="mx-4 mt-3">
-          <View className="mb-2">
+          <View className="flex flex-row items-center justify-between mb-2">
             <Text className="block text-base font-semibold text-gray-900">
               {selectedDate === formatDate(today) ? '今天' : `${selectedDate}`}
             </Text>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCategoryManagement(true)}
+            >
+              <View className="flex flex-row items-center gap-1">
+                <Folder size={14} color="#6b7280" />
+                <Text className="text-xs text-gray-600">分类管理</Text>
+              </View>
+            </Button>
           </View>
 
           {/* ===== Tabs: Work / Todo ===== */}
