@@ -318,14 +318,16 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
               </ScrollView>
             )}
           </View>
-          <DialogFooter>
-            {hiddenCount > 0 && (
+          <DialogFooter className="flex flex-row justify-between">
+            {hiddenCount > 0 ? (
               <Button variant="outline" onClick={() => setShowHidden(!showHidden)}>
                 <View className="flex flex-row items-center gap-1">
                   {showHidden ? <EyeOff size={14} color="#6b7280" /> : <Eye size={14} color="#6b7280" />}
                   <Text className="text-gray-600">{showHidden ? "隐藏勾选" : "显示全部"}</Text>
                 </View>
               </Button>
+            ) : (
+              <View />
             )}
             <Button variant="outline" onClick={() => onOpenChange(false)}>
               <Text className="text-gray-600">关闭</Text>
