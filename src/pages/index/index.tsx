@@ -21,6 +21,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle, DrawerFooter } from '@/components/ui/drawer'
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog'
+import { AlertDialog, AlertDialogContent, AlertDialogHeader, AlertDialogTitle, AlertDialogDescription, AlertDialogFooter, AlertDialogCancel, AlertDialogAction } from '@/components/ui/alert-dialog'
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select'
 import { Network } from '@/network'
 import { CategoryCombobox } from '@/components/category-combobox'
@@ -169,6 +170,8 @@ export default function Index() {
   const [showAddSubItem, setShowAddSubItem] = useState(false)
   const [subItemParentId, setSubItemParentId] = useState('')
   const [subItemContent, setSubItemContent] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteTarget, setDeleteTarget] = useState<{ type: 'work' | 'todo'; id: string } | null>(null)
 
   // ========== Data Fetching ==========
   const fetchCategories = useCallback(async () => {
@@ -298,12 +301,8 @@ export default function Index() {
   }
 
   const handleDeleteWork = async (id: string) => {
-    try {
-      await Network.request({ url: `/api/work-records/${id}`, method: 'DELETE' })
-      fetchWorkRecords()
-    } catch (e) {
-      console.error('Failed to delete work record', e)
-    }
+    setDeleteTarget({ type: 'work', id })
+    setShowDeleteConfirm(true)
   }
 
   // ========== Todo Actions ==========
@@ -426,11 +425,25 @@ export default function Index() {
   }
 
   const handleDeleteTodo = async (id: string) => {
+    setDeleteTarget({ type: 'todo', id })
+    setShowDeleteConfirm(true)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
     try {
-      await Network.request({ url: `/api/todos/${id}`, method: 'DELETE' })
-      fetchTodos()
+      if (deleteTarget.type === 'work') {
+        await Network.request({ url: `/api/work-records/${deleteTarget.id}`, method: 'DELETE' })
+        fetchWorkRecords()
+      } else {
+        await Network.request({ url: `/api/todos/${deleteTarget.id}`, method: 'DELETE' })
+        fetchTodos()
+      }
     } catch (e) {
-      console.error('Failed to delete todo', e)
+      console.error('Failed to delete', e)
+    } finally {
+      setShowDeleteConfirm(false)
+      setDeleteTarget(null)
     }
   }
 
@@ -738,8 +751,8 @@ export default function Index() {
                                       </View>
                                     </CardContent>
                                   </Card>
-                                  {/* Action buttons - width doubled to w-16 */}
-                                  <View className="w-16 flex flex-col border border-gray-200 border-l-0 rounded-r-lg overflow-hidden">
+                                  {/* Action buttons */}
+                                  <View className="w-10 flex flex-col border border-gray-200 border-l-0 rounded-r-lg overflow-hidden">
                                     <View
                                       className="flex-1 bg-gray-100 flex items-center justify-center border-b border-gray-200"
                                       onClick={() => {
@@ -760,7 +773,7 @@ export default function Index() {
 
                                 {/* Sub items section - separate from parent buttons */}
                                 {hasChildren && (
-                                  <View className="mt-2 ml-4">
+                                  <View className="mt-1 ml-4">
                                     <View
                                       className="flex flex-row items-center gap-1 py-1"
                                       onClick={(e) => {
@@ -774,7 +787,7 @@ export default function Index() {
                                       </Text>
                                     </View>
                                     {isExpanded && (
-                                      <View className="gap-2">
+                                      <View className="gap-3">
                                         {todo.children!.map((child) => (
                                           <View key={child.id} className="flex flex-row items-stretch gap-0">
                                             <View className="flex-1 flex flex-row items-center gap-2 py-2 px-3 bg-gray-50 rounded-l-lg">
@@ -790,7 +803,7 @@ export default function Index() {
                                               </Text>
                                             </View>
                                             <View
-                                              className="w-16 flex items-center justify-center bg-gray-100 border border-gray-200 rounded-r-lg"
+                                              className="w-10 flex items-center justify-center bg-gray-100 border border-gray-200 rounded-r-lg"
                                               onClick={() => handleDeleteTodo(child.id)}
                                             >
                                               <Text className="text-gray-400 text-sm">-</Text>
@@ -1057,6 +1070,22 @@ export default function Index() {
         onOpenChange={setShowCategoryManagement}
         onCategoriesChanged={() => fetchCategories()}
       />
+
+      {/* Delete confirmation dialog */}
+      <AlertDialog open={showDeleteConfirm} onOpenChange={setShowDeleteConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              确定要删除这条记录吗？此操作无法撤销。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete}>删除</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </ScrollView>
   )
