@@ -7,18 +7,20 @@ interface SwipeableItemProps {
   actionWidth?: number
 }
 
-export function SwipeableItem({ children, actions, actionWidth = 280 }: SwipeableItemProps) {
+export function SwipeableItem({ children, actions, actionWidth = 140 }: SwipeableItemProps) {
   const [offset, setOffset] = useState(0)
   const startX = useRef(0)
   const isSwiping = useRef(false)
   const maxOffset = actionWidth
 
   const handleTouchStart = (e: any) => {
+    e.stopPropagation()
     startX.current = e.touches[0].clientX
     isSwiping.current = true
   }
 
   const handleTouchMove = (e: any) => {
+    e.stopPropagation()
     if (!isSwiping.current) return
     const currentX = e.touches[0].clientX
     const diff = startX.current - currentX
@@ -29,7 +31,8 @@ export function SwipeableItem({ children, actions, actionWidth = 280 }: Swipeabl
     }
   }
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e: any) => {
+    e.stopPropagation()
     isSwiping.current = false
     if (offset > maxOffset / 2) {
       setOffset(maxOffset)

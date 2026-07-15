@@ -133,6 +133,38 @@ export default function Index() {
     priority: 'urgent_important', deadline: '',
   })
 
+  // Populate form when editing
+  useEffect(() => {
+    if (editingWork) {
+      setWorkForm({
+        category_id: editingWork.category_id || '',
+        sub_category_id: editingWork.sub_category_id || '',
+        content: editingWork.content || '',
+        hours: editingWork.hours ? String(editingWork.hours) : '',
+      })
+    } else if (!showAddWork) {
+      setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '' })
+    }
+  }, [editingWork, showAddWork])
+
+  useEffect(() => {
+    if (editingTodo) {
+      setTodoForm({
+        category_id: editingTodo.category_id || '',
+        sub_category_id: editingTodo.sub_category_id || '',
+        content: editingTodo.content || '',
+        related_person: editingTodo.related_person || '',
+        priority: editingTodo.priority || 'urgent_important',
+        deadline: editingTodo.deadline || '',
+      })
+    } else if (!showAddTodo) {
+      setTodoForm({
+        category_id: '', sub_category_id: '', content: '', related_person: '',
+        priority: 'urgent_important', deadline: '',
+      })
+    }
+  }, [editingTodo, showAddTodo])
+
   // Date picker state
   const [showDatePicker, setShowDatePicker] = useState(false)
 
@@ -257,15 +289,24 @@ export default function Index() {
         record_date: selectedDate,
       }
       if (workForm.sub_category_id) body.sub_category_id = workForm.sub_category_id
-      const res = await Network.request({ url: '/api/work-records', method: 'POST', data: body })
-      console.log('[API] create work record:', res.data)
+      
+      if (editingWork) {
+        // Update existing work record
+        await Network.request({ url: `/api/work-records/${editingWork.id}`, method: 'PUT', data: body })
+        console.log('[API] update work record:', editingWork.id)
+      } else {
+        // Create new work record
+        const res = await Network.request({ url: '/api/work-records', method: 'POST', data: body })
+        console.log('[API] create work record:', res.data)
+      }
       setShowAddWork(false)
+      setEditingWork(null)
       setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '' })
       fetchWorkRecords()
       fetchCategories()
     } catch (e) {
-      console.error('Failed to add work record', e)
-      Taro.showToast({ title: '添加失败', icon: 'none' })
+      console.error('Failed to save work record', e)
+      Taro.showToast({ title: editingWork ? '更新失败' : '添加失败', icon: 'none' })
     }
   }
 
@@ -293,15 +334,24 @@ export default function Index() {
       if (todoForm.sub_category_id) body.sub_category_id = todoForm.sub_category_id
       if (todoForm.related_person) body.related_person = todoForm.related_person
       if (todoForm.deadline) body.deadline = todoForm.deadline
-      const res = await Network.request({ url: '/api/todos', method: 'POST', data: body })
-      console.log('[API] create todo:', res.data)
+      
+      if (editingTodo) {
+        // Update existing todo
+        await Network.request({ url: `/api/todos/${editingTodo.id}`, method: 'PUT', data: body })
+        console.log('[API] update todo:', editingTodo.id)
+      } else {
+        // Create new todo
+        const res = await Network.request({ url: '/api/todos', method: 'POST', data: body })
+        console.log('[API] create todo:', res.data)
+      }
       setShowAddTodo(false)
+      setEditingTodo(null)
       setTodoForm({ category_id: '', sub_category_id: '', content: '', related_person: '', priority: 'urgent_important', deadline: '' })
       fetchTodos()
       fetchCategories()
     } catch (e) {
-      console.error('Failed to add todo', e)
-      Taro.showToast({ title: '添加失败', icon: 'none' })
+      console.error('Failed to save todo', e)
+      Taro.showToast({ title: editingTodo ? '更新失败' : '添加失败', icon: 'none' })
     }
   }
 
@@ -549,6 +599,16 @@ export default function Index() {
             <Text className="block text-base font-semibold text-gray-900">
               {selectedDate === formatDate(today) ? '今天' : `${selectedDate}`}
             </Text>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCategoryManagement(true)}
+            >
+              <View className="flex flex-row items-center gap-1">
+                <Folder size={14} color="#6b7280" />
+                <Text className="text-xs text-gray-600">分类管理</Text>
+              </View>
+            </Button>
           </View>
 
           {/* ===== Tabs: Work / Todo ===== */}
@@ -633,19 +693,8 @@ export default function Index() {
             {/* ===== Todos Tab (Grouped by Priority) ===== */}
             <TabsContent value="todo">
               <View className="gap-3">
-                {/* Add button + Toggle completed + Category management */}
+                {/* Add button + Toggle completed */}
                 <View className="flex flex-row items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setShowCategoryManagement(true)}
-                  >
-                    <View className="flex flex-row items-center gap-1">
-                      <Folder size={14} color="#6b7280" />
-                      <Text className="text-xs text-gray-600">分类管理</Text>
-                    </View>
-                  </Button>
-                  <View className="flex-1" />
                   <Button
                     variant={showCompleted ? 'default' : 'outline'}
                     size="sm"

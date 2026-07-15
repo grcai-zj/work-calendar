@@ -208,7 +208,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                 <Text className="block text-sm text-gray-400 mt-2">暂无分类</Text>
               </View>
             ) : (
-              <ScrollView style={{ maxHeight: "60vh" }}>
+              <ScrollView scrollY style={{ height: "50vh" }}>
                 <View className="gap-3">
                   {categories.map((cat) => (
                     <Card key={cat.id}>
