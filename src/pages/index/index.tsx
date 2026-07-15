@@ -168,6 +168,7 @@ export default function Index() {
 
   // Sub-item states
   const [expandedTodos, setExpandedTodos] = useState<Set<string>>(new Set())
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(new Set())
   const [showAddSubItem, setShowAddSubItem] = useState(false)
   const [subItemParentId, setSubItemParentId] = useState('')
   const [subItemContent, setSubItemContent] = useState('')
@@ -487,6 +488,13 @@ export default function Index() {
     setExpandedTodos(next)
   }
 
+  const toggleGroupCollapse = (groupKey: string) => {
+    const next = new Set(collapsedGroups)
+    if (next.has(groupKey)) next.delete(groupKey)
+    else next.add(groupKey)
+    setCollapsedGroups(next)
+  }
+
   // ========== Render ==========
   return (
     <ScrollView scrollY className="h-full bg-gray-50">
@@ -706,16 +714,23 @@ export default function Index() {
                   </View>
                 ) : (
                   <View className="gap-4">
-                    {groupedTodos.map((group) => (
+                    {groupedTodos.map((group) => {
+                      const isGroupCollapsed = collapsedGroups.has(group.key)
+                      return (
                       <View key={group.key}>
-                        {/* Priority group header */}
-                        <View className="flex flex-row items-center gap-2 mb-2 px-1">
+                        {/* Priority group header - clickable to collapse/expand */}
+                        <View 
+                          className="flex flex-row items-center gap-2 mb-2 px-1"
+                          onClick={() => toggleGroupCollapse(group.key)}
+                        >
+                          {isGroupCollapsed ? <ChevronRight size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
                           <View className={`w-2 h-2 rounded-full ${group.bgColor.replace('50', '500')}`} />
                           <Text className={`block text-sm font-medium ${group.color}`}>{group.label}</Text>
                           <Text className="block text-xs text-gray-400">({group.items.length})</Text>
                         </View>
 
-                        {/* Todo items */}
+                        {/* Todo items - hidden when collapsed */}
+                        {!isGroupCollapsed && (
                         <View className="gap-4">
                           {group.items.map((todo) => {
                             const isExpanded = expandedTodos.has(todo.id)
@@ -836,8 +851,9 @@ export default function Index() {
                             )
                           })}
                         </View>
+                        )}
                         {/* Load more button for completed todos */}
-                        {showCompleted && hasMoreCompleted && (
+                        {showCompleted && hasMoreCompleted && !isGroupCollapsed && (
                           <Button
                             variant="outline"
                             className="mt-2"
@@ -847,7 +863,8 @@ export default function Index() {
                           </Button>
                         )}
                       </View>
-                    ))}
+                      )
+                    })}
                   </View>
                 )}
               </View>
