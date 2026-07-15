@@ -552,7 +552,7 @@ export default function Index() {
                   onClick={() => setSelectedDate(dateStr)}
                 >
                   <View
-                    className={`w-6 h-6 rounded-full items-center justify-center ${
+                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
                       isSelected ? 'bg-blue-600' : isToday ? 'bg-blue-100' : ''
                     }`}
                   >
