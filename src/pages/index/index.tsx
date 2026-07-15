@@ -552,12 +552,14 @@ export default function Index() {
                   onClick={() => setSelectedDate(dateStr)}
                 >
                   <View
-                    className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                    style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '24px', height: '24px', borderRadius: '50%' }}
+                    className={`${
                       isSelected ? 'bg-blue-600' : isToday ? 'bg-blue-100' : ''
                     }`}
                   >
                     <Text
-                      className={`block text-xs text-center leading-none ${
+                      style={{ lineHeight: '1', fontSize: '12px', textAlign: 'center' }}
+                      className={`block text-center ${
                         isSelected ? 'text-white font-semibold' : isToday ? 'text-blue-600 font-medium' : 'text-gray-700'
                       }`}
                     >
