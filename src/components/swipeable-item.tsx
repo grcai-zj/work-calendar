@@ -7,7 +7,7 @@ interface SwipeableItemProps {
   actionWidth?: number
 }
 
-export function SwipeableItem({ children, actions, actionWidth = 70 }: SwipeableItemProps) {
+export function SwipeableItem({ children, actions, actionWidth = 35 }: SwipeableItemProps) {
   const [offset, setOffset] = useState(0)
   const startX = useRef(0)
   const isSwiping = useRef(false)

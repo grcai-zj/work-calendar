@@ -698,7 +698,7 @@ export default function Index() {
                                 actions={
                                   <View className="flex flex-row h-full items-stretch justify-end">
                                     <View
-                                      className="flex-1 bg-blue-500 flex items-center justify-center aspect-square"
+                                      className="h-full flex-1 bg-blue-500 flex items-center justify-center"
                                       onClick={() => {
                                         setSubItemParentId(todo.id)
                                         setShowAddSubItem(true)
@@ -707,7 +707,7 @@ export default function Index() {
                                       <Plus size={20} color="#ffffff" />
                                     </View>
                                     <View
-                                      className="flex-1 bg-red-500 flex items-center justify-center aspect-square"
+                                      className="h-full flex-1 bg-red-500 flex items-center justify-center"
                                       onClick={() => handleDeleteTodo(todo.id)}
                                     >
                                       <Trash2 size={20} color="#ffffff" />
@@ -775,9 +775,9 @@ export default function Index() {
                                             {todo.children!.map((child) => (
                                               <SwipeableItem
                                                 key={child.id}
-                                                actionWidth={140}
+                                                actionWidth={35}
                                                 actions={
-                                                  <View className="flex-1 bg-red-500 h-full flex items-center justify-center aspect-square" onClick={() => handleDeleteTodo(child.id)}>
+                                                  <View className="h-full flex-1 bg-red-500 flex items-center justify-center" onClick={() => handleDeleteTodo(child.id)}>
                                                     <Trash2 size={18} color="#ffffff" />
                                                   </View>
                                                 }
