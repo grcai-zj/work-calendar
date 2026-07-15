@@ -601,10 +601,11 @@ export default function Index() {
                     {workRecords.map((record) => (
                       <SwipeableItem
                         key={record.id}
+                        actionWidth={70}
                         actions={
-                          <View className="flex flex-row h-full items-stretch">
+                          <View className="flex flex-row h-full items-stretch justify-end">
                             <View
-                              className="h-full flex-1 bg-red-500 flex items-center justify-center"
+                              className="h-full w-[70px] bg-red-500 flex items-center justify-center"
                               onClick={() => handleDeleteWork(record.id)}
                             >
                               <Trash2 size={20} color="#fff" />
