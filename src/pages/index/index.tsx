@@ -12,6 +12,7 @@ import {
   ChevronUp,
   Calendar,
   Folder,
+  Download,
 } from 'lucide-react-taro'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -232,6 +233,78 @@ export default function Index() {
     setWorkRecords([])
     setTodos([])
   }, [])
+
+  // 导出工作内容
+  const handleExportWorkRecords = useCallback(async () => {
+    if (!currentUser || workRecords.length === 0) {
+      Taro.showToast({ title: '没有可导出的数据', icon: 'none' })
+      return
+    }
+
+    // 构建 CSV 内容
+    const headers = ['日期', '大类', '小类', '内容', '耗时(h)']
+    const rows = workRecords.map(record => {
+      const categoryName = record.category_name || ''
+      const subCategoryName = record.sub_category_name || ''
+      const content = record.content.replace(/,/g, '，') // 替换逗号为中文逗号
+      return [record.record_date, categoryName, subCategoryName, content, record.hours.toString()]
+    })
+
+    const csvContent = [
+      headers.join(','),
+      ...rows.map(row => row.join(','))
+    ].join('\n')
+
+    // 在小程序中使用文件系统保存
+    try {
+      const fs = Taro.getFileSystemManager()
+      const filePath = `${Taro.env.USER_DATA_PATH}/work_records_${selectedDate}.csv`
+      
+      fs.writeFile({
+        filePath,
+        data: csvContent,
+        encoding: 'utf8',
+        success: () => {
+          Taro.openDocument({
+            filePath,
+            showMenu: true,
+            success: () => {
+              Taro.showToast({ title: '导出成功', icon: 'success' })
+            },
+            fail: (err) => {
+              console.error('打开文档失败', err)
+              // 如果打开文档失败，尝试复制到剪贴板
+              Taro.setClipboardData({
+                data: csvContent,
+                success: () => {
+                  Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+                }
+              })
+            }
+          })
+        },
+        fail: (err) => {
+          console.error('保存文件失败', err)
+          // 如果保存文件失败，尝试复制到剪贴板
+          Taro.setClipboardData({
+            data: csvContent,
+            success: () => {
+              Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+            }
+          })
+        }
+      })
+    } catch (err) {
+      console.error('导出失败', err)
+      // 降级方案：复制到剪贴板
+      Taro.setClipboardData({
+        data: csvContent,
+        success: () => {
+          Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+        }
+      })
+    }
+  }, [currentUser, workRecords, selectedDate])
 
   // 初始化时检查本地存储的用户信息
   useEffect(() => {
@@ -669,16 +742,30 @@ export default function Index() {
             <Text className="block text-base font-semibold text-gray-900">
               {selectedDate === formatDate(today) ? '今天' : `${selectedDate}`}
             </Text>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowCategoryManagement(true)}
-            >
-              <View className="flex flex-row items-center gap-1">
-                <Folder size={14} color="#6b7280" />
-                <Text className="text-xs text-gray-600">分类管理</Text>
-              </View>
-            </Button>
+            <View className="flex flex-row items-center gap-2">
+              {currentUser && workRecords.length > 0 && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleExportWorkRecords}
+                >
+                  <View className="flex flex-row items-center gap-1">
+                    <Download size={14} color="#6b7280" />
+                    <Text className="text-xs text-gray-600">导出</Text>
+                  </View>
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCategoryManagement(true)}
+              >
+                <View className="flex flex-row items-center gap-1">
+                  <Folder size={14} color="#6b7280" />
+                  <Text className="text-xs text-gray-600">分类管理</Text>
+                </View>
+              </Button>
+            </View>
           </View>
 
           {/* ===== Tabs: Work / Todo ===== */}
