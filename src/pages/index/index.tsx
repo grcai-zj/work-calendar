@@ -37,6 +37,7 @@ interface CategoryItem {
   name: string
   type: string
   level: number
+  hidden?: boolean
   children?: CategoryItem[]
 }
 
@@ -247,6 +248,14 @@ export default function Index() {
   const selectedTodoCategory = categories.find(c => c.id === todoForm.category_id)
   const workSubCategories = selectedWorkCategory?.children || []
   const todoSubCategories = selectedTodoCategory?.children || []
+  
+  // Filter out hidden categories for display in forms
+  const visibleCategories = categories.filter(c => !c.hidden).map(c => ({
+    ...c,
+    children: c.children?.filter(sub => !sub.hidden) || []
+  }))
+  const visibleWorkSubCategories = workSubCategories.filter(sub => !sub.hidden)
+  const visibleTodoSubCategories = todoSubCategories.filter(sub => !sub.hidden)
 
   // ========== Group todos by priority (only for incomplete) ==========
   const incompleteTodos = todos.filter(t => t.status !== 'completed')
@@ -849,7 +858,7 @@ export default function Index() {
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
-              categories={categories}
+              categories={visibleCategories}
               value={workForm.category_id}
               onValueChange={(val) => setWorkForm({ ...workForm, category_id: val, sub_category_id: '' })}
               placeholder="选择或输入大类"
@@ -858,7 +867,7 @@ export default function Index() {
               onCategoryCreated={() => fetchCategories()}
             />
             <CategoryCombobox
-              categories={workSubCategories}
+              categories={visibleWorkSubCategories}
               value={workForm.sub_category_id}
               onValueChange={(val) => setWorkForm({ ...workForm, sub_category_id: val })}
               placeholder="选择或输入小类（可选）"
@@ -911,7 +920,7 @@ export default function Index() {
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
-              categories={categories}
+              categories={visibleCategories}
               value={todoForm.category_id}
               onValueChange={(val) => setTodoForm({ ...todoForm, category_id: val, sub_category_id: '' })}
               placeholder="选择或输入大类"
@@ -920,7 +929,7 @@ export default function Index() {
               onCategoryCreated={() => fetchCategories()}
             />
             <CategoryCombobox
-              categories={todoSubCategories}
+              categories={visibleTodoSubCategories}
               value={todoForm.sub_category_id}
               onValueChange={(val) => setTodoForm({ ...todoForm, sub_category_id: val })}
               placeholder="选择或输入小类（可选）"
