@@ -8,6 +8,7 @@ export interface Category {
   type: string;
   level: number;
   sort_order: number;
+  hidden?: boolean;
   created_at: string;
 }
 
@@ -35,7 +36,7 @@ export class CategoriesService {
   async findTree(type?: string): Promise<any[]> {
     let parentQuery = this.client
       .from('categories')
-      .select('id, parent_id, name, type, level, sort_order, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
       .eq('level', 1)
       .order('sort_order')
       .order('created_at');
@@ -47,7 +48,7 @@ export class CategoriesService {
 
     let childQuery = this.client
       .from('categories')
-      .select('id, parent_id, name, type, level, sort_order, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
       .eq('level', 2)
       .order('sort_order')
       .order('created_at');

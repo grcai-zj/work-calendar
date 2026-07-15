@@ -192,7 +192,12 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   // Filter categories based on showHidden state
   const filteredCategories = showHidden 
     ? categories 
-    : categories.filter(cat => !cat.hidden)
+    : categories
+        .filter(cat => !cat.hidden)
+        .map(cat => ({
+          ...cat,
+          children: cat.children?.filter(sub => !sub.hidden) || []
+        }))
 
   // Count hidden categories
   const hiddenCount = categories.filter(cat => cat.hidden).length + 
