@@ -590,17 +590,17 @@ export default function Index() {
           <View className="flex flex-row items-center justify-between mb-2">
             {/* User Button */}
             <Button
-              variant="ghost"
+              variant="outline"
               size="icon"
-              className="h-8 w-8"
+              className="h-9 w-9 border-2 border-blue-300 bg-blue-50"
               onClick={() => setShowUserDialog(true)}
             >
               {currentUser ? (
-                <Text className="block text-xs text-gray-600">
+                <Text className="block text-sm font-bold text-blue-600">
                   {currentUser.nickname?.charAt(0) || 'U'}
                 </Text>
               ) : (
-                <Text className="block text-xs text-gray-400">登录</Text>
+                <Text className="block text-sm font-medium text-blue-400">登录</Text>
               )}
             </Button>
 
