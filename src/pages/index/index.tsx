@@ -501,18 +501,16 @@ export default function Index() {
       <View className="min-h-full pb-8">
         {/* ===== Calendar Header ===== */}
         <View className="bg-white px-4 pt-3 pb-1">
-          <View className="flex flex-row items-center justify-between mb-2">
+          <View className="flex flex-row items-center justify-center gap-2 mb-2">
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevMonth}>
+              <ChevronLeft size={14} color="#6b7280" />
+            </Button>
             <Text className="block text-base font-bold text-gray-900">
               {currentYear}年{currentMonth + 1}月
             </Text>
-            <View className="flex flex-row gap-1">
-              <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevMonth}>
-                <ChevronLeft size={14} color="#6b7280" />
-              </Button>
-              <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextMonth}>
-                <ChevronRight size={14} color="#6b7280" />
-              </Button>
-            </View>
+            <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextMonth}>
+              <ChevronRight size={14} color="#6b7280" />
+            </Button>
           </View>
 
           {/* Weekday headers */}
