@@ -696,7 +696,7 @@ export default function Index() {
                               <SwipeableItem
                                 key={todo.id}
                                 actions={
-                                  <View className="flex flex-row h-full items-stretch justify-end">
+                                  <View className="flex flex-row h-full items-stretch">
                                     <View
                                       className="h-full flex-1 bg-blue-500 flex items-center justify-center"
                                       onClick={() => {
