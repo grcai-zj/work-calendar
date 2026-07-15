@@ -253,7 +253,7 @@ export default function Index() {
 
   // ========== Data Fetching ==========
   const fetchCategories = useCallback(async () => {
-    if (!currentUser) return
+    if (!currentUser) { setCategories([]); return }
     try {
       const res = await Network.request({
         url: '/api/categories/tree',
@@ -267,7 +267,7 @@ export default function Index() {
   }, [currentUser, getRequestHeaders])
 
   const fetchWorkRecords = useCallback(async () => {
-    if (!currentUser) return
+    if (!currentUser) { setWorkRecords([]); return }
     try {
       const res = await Network.request({
         url: `/api/work-records?date=${selectedDate}`,
@@ -281,7 +281,7 @@ export default function Index() {
   }, [selectedDate, currentUser, getRequestHeaders])
 
   const fetchTodos = useCallback(async () => {
-    if (!currentUser) return
+    if (!currentUser) { setTodos([]); return }
     try {
       const status = showCompleted ? 'completed' : ''
       const url = status ? `/api/todos?status=${status}` : '/api/todos'
