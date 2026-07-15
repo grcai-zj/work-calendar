@@ -600,16 +600,18 @@ export default function Index() {
             {/* ===== Work Records Tab ===== */}
             <TabsContent value="work">
               <View className="gap-3">
-                <Button
-                  variant="outline"
-                  className="w-full border-dashed border-gray-300"
-                  onClick={() => setShowAddWork(true)}
-                >
-                  <View className="flex flex-row items-center gap-1">
-                    <Plus size={16} color="#6b7280" />
-                    <Text className="text-sm text-gray-500">记录工作内容</Text>
-                  </View>
-                </Button>
+                <View className="flex flex-row justify-end">
+                  <Button
+                    variant="outline"
+                    className="w-1/2 border-dashed border-gray-300"
+                    onClick={() => setShowAddWork(true)}
+                  >
+                    <View className="flex flex-row items-center gap-1">
+                      <Plus size={16} color="#6b7280" />
+                      <Text className="text-sm text-gray-500">记录工作内容</Text>
+                    </View>
+                  </Button>
+                </View>
 
                 {workRecords.length === 0 ? (
                   <View className="items-center py-8">
@@ -666,7 +668,7 @@ export default function Index() {
             <TabsContent value="todo">
               <View className="gap-3">
                 {/* Add button + Toggle completed */}
-                <View className="flex flex-row items-center gap-2">
+                <View className="flex flex-row items-center justify-end gap-2">
                   <Button
                     variant={showCompleted ? 'default' : 'outline'}
                     size="sm"
@@ -684,7 +686,7 @@ export default function Index() {
                   </Button>
                   <Button 
                     variant="outline" 
-                    className="w-full border-dashed border-gray-300"
+                    className="w-1/2 border-dashed border-gray-300"
                     onClick={() => setShowAddTodo(true)}
                   >
                     <View className="flex flex-row items-center gap-1">
@@ -822,7 +824,7 @@ export default function Index() {
                                               className="w-10 flex items-center justify-center bg-gray-100 border border-gray-200 rounded-r-lg"
                                               onClick={() => handleDeleteTodo(child.id)}
                                             >
-                                              <Text className="text-gray-400 text-sm">-</Text>
+                                              <Text className="text-gray-400 text-lg">-</Text>
                                             </View>
                                           </View>
                                         ))}
