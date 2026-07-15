@@ -51,9 +51,9 @@ export function SwipeableItem({ children, actions, actionWidth = 280 }: Swipeabl
 
   return (
     <View className="relative overflow-hidden">
-      {/* Actions (behind) */}
+      {/* Actions (behind) - positioned on the right */}
       <View
-        className="absolute right-0 top-0 bottom-0 flex flex-row"
+        className="absolute right-0 top-0 bottom-0 flex flex-row items-stretch"
         style={{ width: `${maxOffset}px` }}
       >
         {actions}

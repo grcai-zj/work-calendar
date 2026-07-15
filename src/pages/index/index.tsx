@@ -697,21 +697,21 @@ export default function Index() {
                               <SwipeableItem
                                 key={todo.id}
                                 actions={
-                                  <View className="flex flex-row h-full">
+                                  <View className="flex flex-row h-full items-stretch">
                                     <View
-                                      className="flex-1 bg-blue-500 items-center justify-center"
+                                      className="flex-1 bg-blue-500 flex items-center justify-center aspect-square"
                                       onClick={() => {
                                         setSubItemParentId(todo.id)
                                         setShowAddSubItem(true)
                                       }}
                                     >
-                                      <Plus size={18} color="#ffffff" />
+                                      <Plus size={20} color="#ffffff" />
                                     </View>
                                     <View
-                                      className="flex-1 bg-red-500 items-center justify-center"
+                                      className="flex-1 bg-red-500 flex items-center justify-center aspect-square"
                                       onClick={() => handleDeleteTodo(todo.id)}
                                     >
-                                      <Trash2 size={18} color="#ffffff" />
+                                      <Trash2 size={20} color="#ffffff" />
                                     </View>
                                   </View>
                                 }
@@ -720,7 +720,7 @@ export default function Index() {
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
-                                      <View className="pt-1">
+                                      <View className="pt-1" onClick={(e) => e.stopPropagation()}>
                                         <StatusIcon status={todo.status} size={20} onClick={() => handleToggleStatus(todo)} />
                                       </View>
                                       {/* Content */}
@@ -761,7 +761,10 @@ export default function Index() {
                                       <View className="mt-2 pt-2 border-t border-gray-100">
                                         <View
                                           className="flex flex-row items-center gap-1"
-                                          onClick={() => toggleExpand(todo.id)}
+                                          onClick={(e) => {
+                                            e.stopPropagation()
+                                            toggleExpand(todo.id)
+                                          }}
                                         >
                                           {isExpanded ? <ChevronUp size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
                                           <Text className="block text-xs text-gray-500">
@@ -775,16 +778,15 @@ export default function Index() {
                                                 key={child.id}
                                                 actionWidth={140}
                                                 actions={
-                                                  <View
-                                                    className="flex-1 bg-red-500 h-full items-center justify-center"
-                                                    onClick={() => handleDeleteTodo(child.id)}
-                                                  >
-                                                    <Trash2 size={16} color="#ffffff" />
+                                                  <View className="flex-1 bg-red-500 h-full flex items-center justify-center aspect-square" onClick={() => handleDeleteTodo(child.id)}>
+                                                    <Trash2 size={18} color="#ffffff" />
                                                   </View>
                                                 }
                                               >
                                                 <View className="flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
-                                                  <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
+                                                  <View onClick={(e) => e.stopPropagation()}>
+                                                    <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
+                                                  </View>
                                                   <Text
                                                     className={`block text-xs flex-1 ${
                                                       child.status === 'completed' ? 'text-gray-400 line-through' : 'text-gray-600'
