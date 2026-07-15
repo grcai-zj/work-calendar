@@ -720,7 +720,7 @@ export default function Index() {
                       <View key={group.key}>
                         {/* Priority group header - clickable to collapse/expand */}
                         <View 
-                          className="flex flex-row items-center gap-2 mb-2 px-1"
+                          className="flex flex-row items-center gap-2 mt-3 mb-2 px-1"
                           onClick={() => toggleGroupCollapse(group.key)}
                         >
                           {isGroupCollapsed ? <ChevronRight size={14} color="#6b7280" /> : <ChevronDown size={14} color="#6b7280" />}
