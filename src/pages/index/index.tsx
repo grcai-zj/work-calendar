@@ -608,7 +608,7 @@ export default function Index() {
                   >
                     <View className="flex flex-row items-center gap-1">
                       <Plus size={16} color="#6b7280" />
-                      <Text className="text-sm text-gray-500">记录工作内容</Text>
+                      <Text className="text-sm text-gray-500">记录工作</Text>
                     </View>
                   </Button>
                 </View>
