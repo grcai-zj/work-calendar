@@ -22,9 +22,10 @@ interface CategoryManagementProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCategoriesChanged: () => void
+  userId?: string
 }
 
-export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: CategoryManagementProps) {
+export function CategoryManagement({ open, onOpenChange, onCategoriesChanged, userId }: CategoryManagementProps) {
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [loading, setLoading] = useState(false)
   const [newCategoryName, setNewCategoryName] = useState('')
@@ -39,7 +40,8 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   const fetchCategories = async () => {
     setLoading(true)
     try {
-      const res = await Network.request({ url: '/api/categories/tree' })
+      const header = userId ? { 'x-user-id': userId } : {}
+      const res = await Network.request({ url: '/api/categories/tree', header })
       setCategories(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch categories', e)
@@ -90,10 +92,12 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     }
     
     try {
+      const header = userId ? { 'x-user-id': userId } : {}
       await Network.request({
         url: '/api/categories',
         method: 'POST',
         data: { name, type: 'shared' },
+        header,
       })
       setNewCategoryName('')
       await fetchCategories()
@@ -118,10 +122,12 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
     }
     
     try {
+      const header = userId ? { 'x-user-id': userId } : {}
       await Network.request({
         url: '/api/categories',
         method: 'POST',
         data: { name, type: 'shared', parent_id: selectedParentId },
+        header,
       })
       setNewSubCategoryName('')
       setSelectedParentId(null)
@@ -136,9 +142,11 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   const handleDeleteCategory = async () => {
     if (!deletingCategory) return
     try {
+      const header = userId ? { 'x-user-id': userId } : {}
       await Network.request({
         url: `/api/categories/${deletingCategory.id}`,
         method: 'DELETE',
+        header,
       })
       setDeletingCategory(null)
       await fetchCategories()
@@ -151,10 +159,12 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   const handleEditCategory = async () => {
     if (!editingCategory || !editName.trim()) return
     try {
+      const header = userId ? { 'x-user-id': userId } : {}
       await Network.request({
         url: `/api/categories/${editingCategory.id}`,
         method: 'PUT',
         data: { name: editName.trim() },
+        header,
       })
       setEditingCategory(null)
       setEditName('')
@@ -167,10 +177,12 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
 
   const handleToggleHidden = async (category: CategoryItem) => {
     try {
+      const header = userId ? { 'x-user-id': userId } : {}
       await Network.request({
         url: `/api/categories/${category.id}`,
         method: 'PUT',
         data: { hidden: !category.hidden },
+        header,
       })
       await fetchCategories()
       onCategoriesChanged()

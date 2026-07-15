@@ -31,6 +31,13 @@ import { CategoryManagement } from '@/components/category-management'
 import './index.css'
 
 // ========== Types ==========
+interface UserInfo {
+  id: string
+  openid: string
+  nickname?: string
+  avatar_url?: string
+}
+
 interface CategoryItem {
   id: string
   parent_id: string | null
@@ -107,6 +114,8 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState('work')
 
   // Data states
+  const [currentUser, setCurrentUser] = useState<UserInfo | null>(null)
+  const [showUserDialog, setShowUserDialog] = useState(false)
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -175,39 +184,114 @@ export default function Index() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState<{ type: 'work' | 'todo'; id: string } | null>(null)
 
+  // ========== Helper Functions ==========
+  const getRequestHeaders = useCallback(() => {
+    if (!currentUser) return {}
+    return { 'x-user-id': currentUser.id }
+  }, [currentUser])
+
+  // ========== User Management ==========
+  const handleLogin = useCallback(async () => {
+    try {
+      // 调用微信登录获取 code
+      const loginRes = await Taro.login()
+      if (!loginRes.code) {
+        Taro.showToast({ title: '登录失败', icon: 'none' })
+        return
+      }
+
+      // 调用后端登录接口
+      const res = await Network.request({
+        url: '/api/users/login',
+        method: 'POST',
+        data: {
+          openid: loginRes.code, // 实际项目中应该用 code 换取 openid
+          nickname: '用户',
+        },
+      })
+
+      if (res.data?.code === 200 && res.data?.data) {
+        const user = res.data.data as UserInfo
+        setCurrentUser(user)
+        Taro.setStorageSync('userId', user.id)
+        setShowUserDialog(false)
+        Taro.showToast({ title: '登录成功', icon: 'success' })
+      }
+    } catch (e) {
+      console.error('Login failed', e)
+      Taro.showToast({ title: '登录失败', icon: 'none' })
+    }
+  }, [])
+
+  const handleLogout = useCallback(() => {
+    setCurrentUser(null)
+    Taro.removeStorageSync('userId')
+    setShowUserDialog(false)
+    // 清空数据
+    setCategories([])
+    setWorkRecords([])
+    setTodos([])
+  }, [])
+
+  // 初始化时检查本地存储的用户信息
+  useEffect(() => {
+    const userId = Taro.getStorageSync('userId')
+    if (userId) {
+      // 获取用户信息
+      Network.request({
+        url: '/api/users/me',
+        header: { 'x-user-id': userId },
+      }).then(res => {
+        if (res.data?.code === 200 && res.data?.data) {
+          setCurrentUser(res.data.data as UserInfo)
+        }
+      }).catch(() => {
+        Taro.removeStorageSync('userId')
+      })
+    }
+  }, [])
+
   // ========== Data Fetching ==========
   const fetchCategories = useCallback(async () => {
+    if (!currentUser) return
     try {
-      // Fetch all categories (both work and todo share the same categories)
-      const res = await Network.request({ url: '/api/categories/tree' })
+      const res = await Network.request({
+        url: '/api/categories/tree',
+        header: getRequestHeaders(),
+      })
       console.log('[API] categories:', res.data)
       setCategories(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch categories', e)
     }
-  }, [])
+  }, [currentUser, getRequestHeaders])
 
   const fetchWorkRecords = useCallback(async () => {
+    if (!currentUser) return
     try {
-      const res = await Network.request({ url: `/api/work-records?date=${selectedDate}` })
+      const res = await Network.request({
+        url: `/api/work-records?date=${selectedDate}`,
+        header: getRequestHeaders(),
+      })
       console.log('[API] work records:', res.data)
       setWorkRecords(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch work records', e)
     }
-  }, [selectedDate])
+  }, [selectedDate, currentUser, getRequestHeaders])
 
   const fetchTodos = useCallback(async () => {
+    if (!currentUser) return
     try {
       const status = showCompleted ? 'completed' : ''
       const url = status ? `/api/todos?status=${status}` : '/api/todos'
-      const res = await Network.request({ url })
+      const res = await Network.request({ url, header: getRequestHeaders() })
       console.log('[API] todos:', res.data)
       setTodos(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch todos', e)
     }
-  }, [showCompleted])
+  }, [showCompleted, currentUser, getRequestHeaders])
 
 
   useEffect(() => {
@@ -292,11 +376,11 @@ export default function Index() {
       
       if (editingWork) {
         // Update existing work record
-        await Network.request({ url: `/api/work-records/${editingWork.id}`, method: 'PUT', data: body })
+        await Network.request({ url: `/api/work-records/${editingWork.id}`, method: 'PUT', data: body, header: getRequestHeaders() })
         console.log('[API] update work record:', editingWork.id)
       } else {
         // Create new work record
-        const res = await Network.request({ url: '/api/work-records', method: 'POST', data: body })
+        const res = await Network.request({ url: '/api/work-records', method: 'POST', data: body, header: getRequestHeaders() })
         console.log('[API] create work record:', res.data)
       }
       setShowAddWork(false)
@@ -333,11 +417,11 @@ export default function Index() {
       
       if (editingTodo) {
         // Update existing todo
-        await Network.request({ url: `/api/todos/${editingTodo.id}`, method: 'PUT', data: body })
+        await Network.request({ url: `/api/todos/${editingTodo.id}`, method: 'PUT', data: body, header: getRequestHeaders() })
         console.log('[API] update todo:', editingTodo.id)
       } else {
         // Create new todo
-        const res = await Network.request({ url: '/api/todos', method: 'POST', data: body })
+        const res = await Network.request({ url: '/api/todos', method: 'POST', data: body, header: getRequestHeaders() })
         console.log('[API] create todo:', res.data)
       }
       setShowAddTodo(false)
@@ -360,7 +444,7 @@ export default function Index() {
       return
     }
     try {
-      await Network.request({ url: `/api/todos/${todo.id}`, method: 'PUT', data: { status: nextStatus } })
+      await Network.request({ url: `/api/todos/${todo.id}`, method: 'PUT', data: { status: nextStatus }, header: getRequestHeaders() })
       fetchTodos()
       // If this is a sub-item, also update parent status
       if (todo.parent_todo_id) {
@@ -374,7 +458,7 @@ export default function Index() {
   const updateParentStatus = async (parentId: string) => {
     try {
       // Fetch all sub-items of this parent
-      const res = await Network.request({ url: `/api/todos?parent_todo_id=${parentId}` })
+      const res = await Network.request({ url: `/api/todos?parent_todo_id=${parentId}`, header: getRequestHeaders() })
       const subItems = res.data?.data || []
       
       if (subItems.length === 0) return
@@ -393,7 +477,7 @@ export default function Index() {
         newStatus = 'not_started'
       }
       
-      await Network.request({ url: `/api/todos/${parentId}`, method: 'PUT', data: { status: newStatus } })
+      await Network.request({ url: `/api/todos/${parentId}`, method: 'PUT', data: { status: newStatus }, header: getRequestHeaders() })
       // Refresh todos list
       await fetchTodos()
     } catch (e) {
@@ -405,7 +489,7 @@ export default function Index() {
     if (!completingTodo) return
     try {
       const hours = parseFloat(completeHours) || 0
-      await Network.request({ url: `/api/todos/${completingTodo.id}`, method: 'PUT', data: { status: 'completed', hours } })
+      await Network.request({ url: `/api/todos/${completingTodo.id}`, method: 'PUT', data: { status: 'completed', hours }, header: getRequestHeaders() })
       if (hours > 0) {
         await Network.request({
           url: '/api/work-records',
@@ -417,6 +501,7 @@ export default function Index() {
             hours,
             record_date: selectedDate,
           },
+          header: getRequestHeaders(),
         })
       }
       setShowCompleteDialog(false)
@@ -443,10 +528,10 @@ export default function Index() {
     if (!deleteTarget) return
     try {
       if (deleteTarget.type === 'work') {
-        await Network.request({ url: `/api/work-records/${deleteTarget.id}`, method: 'DELETE' })
+        await Network.request({ url: `/api/work-records/${deleteTarget.id}`, method: 'DELETE', header: getRequestHeaders() })
         fetchWorkRecords()
       } else {
-        await Network.request({ url: `/api/todos/${deleteTarget.id}`, method: 'DELETE' })
+        await Network.request({ url: `/api/todos/${deleteTarget.id}`, method: 'DELETE', header: getRequestHeaders() })
         fetchTodos()
       }
     } catch (e) {
@@ -471,6 +556,7 @@ export default function Index() {
           parent_todo_id: subItemParentId,
           priority: parent?.priority || 'urgent_important',
         },
+        header: getRequestHeaders(),
       })
       setShowAddSubItem(false)
       setSubItemContent('')
@@ -501,16 +587,35 @@ export default function Index() {
       <View className="min-h-full pb-8">
         {/* ===== Calendar Header ===== */}
         <View className="bg-white px-4 pt-3 pb-1">
-          <View className="flex flex-row items-center justify-end gap-2 mb-2">
-            <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevMonth}>
-              <ChevronLeft size={14} color="#6b7280" />
+          <View className="flex flex-row items-center justify-between mb-2">
+            {/* User Button */}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-8 w-8"
+              onClick={() => setShowUserDialog(true)}
+            >
+              {currentUser ? (
+                <Text className="block text-xs text-gray-600">
+                  {currentUser.nickname?.charAt(0) || 'U'}
+                </Text>
+              ) : (
+                <Text className="block text-xs text-gray-400">登录</Text>
+              )}
             </Button>
-            <Text className="block text-base font-bold text-gray-900">
-              {currentYear}年{currentMonth + 1}月
-            </Text>
-            <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextMonth}>
-              <ChevronRight size={14} color="#6b7280" />
-            </Button>
+
+            {/* Month Navigation */}
+            <View className="flex flex-row items-center gap-2">
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevMonth}>
+                <ChevronLeft size={14} color="#6b7280" />
+              </Button>
+              <Text className="block text-base font-bold text-gray-900">
+                {currentYear}年{currentMonth + 1}月
+              </Text>
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextMonth}>
+                <ChevronRight size={14} color="#6b7280" />
+              </Button>
+            </View>
           </View>
 
           {/* Weekday headers */}
@@ -1013,6 +1118,51 @@ export default function Index() {
         </DrawerContent>
       </Drawer>
 
+      {/* ===== User Dialog ===== */}
+      <Dialog open={showUserDialog} onOpenChange={setShowUserDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>用户管理</DialogTitle>
+          </DialogHeader>
+          <View className="py-4">
+            {currentUser ? (
+              <View className="items-center gap-4">
+                <View className="h-16 w-16 rounded-full bg-blue-100 items-center justify-center">
+                  <Text className="block text-2xl font-bold text-blue-600">
+                    {currentUser.nickname?.charAt(0) || 'U'}
+                  </Text>
+                </View>
+                <Text className="block text-lg font-semibold text-gray-900">
+                  {currentUser.nickname || '用户'}
+                </Text>
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={handleLogout}
+                >
+                  <Text>退出登录</Text>
+                </Button>
+              </View>
+            ) : (
+              <View className="items-center gap-4">
+                <View className="h-16 w-16 rounded-full bg-gray-100 items-center justify-center">
+                  <Text className="block text-2xl text-gray-400">?</Text>
+                </View>
+                <Text className="block text-sm text-gray-500 text-center">
+                  登录后可以保存您的工作记录和待办事项
+                </Text>
+                <Button
+                  className="w-full mt-4"
+                  onClick={handleLogin}
+                >
+                  <Text>微信登录</Text>
+                </Button>
+              </View>
+            )}
+          </View>
+        </DialogContent>
+      </Dialog>
+
       {/* ===== Date Picker Dialog ===== */}
       <DatePickerDialog
         open={showDatePicker}
@@ -1094,6 +1244,7 @@ export default function Index() {
         open={showCategoryManagement}
         onOpenChange={setShowCategoryManagement}
         onCategoriesChanged={() => fetchCategories()}
+        userId={currentUser?.id}
       />
 
       {/* Delete confirmation dialog */}

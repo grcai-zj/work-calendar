@@ -9,6 +9,7 @@ export interface Category {
   level: number;
   sort_order: number;
   hidden?: boolean;
+  user_id?: string;
   created_at: string;
 }
 
@@ -19,13 +20,16 @@ export class CategoriesService {
   }
 
   // 获取分类列表（支持按类型和层级筛选）
-  async findAll(type?: string, level?: number): Promise<Category[]> {
-    let query = this.client.from('categories').select('id, parent_id, name, type, level, sort_order, created_at');
+  async findAll(type?: string, level?: number, userId?: string): Promise<Category[]> {
+    let query = this.client.from('categories').select('id, parent_id, name, type, level, sort_order, hidden, user_id, created_at');
     if (type) {
       query = query.eq('type', type);
     }
     if (level) {
       query = query.eq('level', level);
+    }
+    if (userId) {
+      query = query.eq('user_id', userId);
     }
     const { data, error } = await query.order('sort_order').order('created_at');
     if (error) throw new Error(`查询分类失败: ${error.message}`);
@@ -33,27 +37,33 @@ export class CategoriesService {
   }
 
   // 获取大类及其小类（树形结构）
-  async findTree(type?: string): Promise<any[]> {
+  async findTree(type?: string, userId?: string): Promise<any[]> {
     let parentQuery = this.client
       .from('categories')
-      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, user_id, created_at')
       .eq('level', 1)
       .order('sort_order')
       .order('created_at');
     if (type) {
       parentQuery = parentQuery.eq('type', type);
     }
+    if (userId) {
+      parentQuery = parentQuery.eq('user_id', userId);
+    }
     const { data: parents, error: parentError } = await parentQuery;
     if (parentError) throw new Error(`查询大类失败: ${parentError.message}`);
 
     let childQuery = this.client
       .from('categories')
-      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, user_id, created_at')
       .eq('level', 2)
       .order('sort_order')
       .order('created_at');
     if (type) {
       childQuery = childQuery.eq('type', type);
+    }
+    if (userId) {
+      childQuery = childQuery.eq('user_id', userId);
     }
     const { data: children, error: childError } = await childQuery;
     if (childError) throw new Error(`查询小类失败: ${childError.message}`);
@@ -66,7 +76,7 @@ export class CategoriesService {
   }
 
   // 创建分类
-  async create(body: { name: string; type: string; parent_id?: string; level?: number; sort_order?: number }): Promise<Category> {
+  async create(body: { name: string; type: string; parent_id?: string; level?: number; sort_order?: number; user_id?: string }): Promise<Category> {
     const insertData: any = {
       name: body.name,
       type: body.type,
@@ -76,10 +86,13 @@ export class CategoriesService {
     if (body.parent_id) {
       insertData.parent_id = body.parent_id;
     }
+    if (body.user_id) {
+      insertData.user_id = body.user_id;
+    }
     const { data, error } = await this.client
       .from('categories')
       .insert(insertData)
-      .select('id, parent_id, name, type, level, sort_order, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, user_id, created_at')
       .single();
     if (error) throw new Error(`创建分类失败: ${error.message}`);
     return data as Category;
@@ -104,7 +117,7 @@ export class CategoriesService {
       .from('categories')
       .update(updateData)
       .eq('id', id)
-      .select('id, parent_id, name, type, level, sort_order, hidden, created_at')
+      .select('id, parent_id, name, type, level, sort_order, hidden, user_id, created_at')
       .single();
     if (error) throw new Error(`更新分类失败: ${error.message}`);
     return data as Category;

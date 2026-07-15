@@ -8,6 +8,7 @@ export interface WorkRecord {
   content: string;
   hours: number;
   record_date: string;
+  user_id?: string;
   created_at: string;
   updated_at: string | null;
   category_name?: string;
@@ -21,12 +22,18 @@ export class WorkRecordsService {
   }
 
   // 按日期查询工作内容
-  async findByDate(recordDate: string): Promise<WorkRecord[]> {
-    const { data, error } = await this.client
+  async findByDate(recordDate: string, userId?: string): Promise<WorkRecord[]> {
+    let query = this.client
       .from('work_records')
-      .select('id, category_id, sub_category_id, content, hours, record_date, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, hours, record_date, user_id, created_at, updated_at')
       .eq('record_date', recordDate)
       .order('created_at', { ascending: false });
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
     if (error) throw new Error(`查询工作内容失败: ${error.message}`);
 
     // 批量获取分类名称
@@ -51,20 +58,26 @@ export class WorkRecordsService {
   }
 
   // 按日期范围查询（日历标记用）
-  async findByDateRange(startDate: string, endDate: string): Promise<WorkRecord[]> {
-    const { data, error } = await this.client
+  async findByDateRange(startDate: string, endDate: string, userId?: string): Promise<WorkRecord[]> {
+    let query = this.client
       .from('work_records')
-      .select('id, category_id, sub_category_id, content, hours, record_date, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, hours, record_date, user_id, created_at, updated_at')
       .gte('record_date', startDate)
       .lte('record_date', endDate)
       .order('record_date', { ascending: true })
       .order('created_at', { ascending: false });
+
+    if (userId) {
+      query = query.eq('user_id', userId);
+    }
+
+    const { data, error } = await query;
     if (error) throw new Error(`查询工作内容失败: ${error.message}`);
     return data as WorkRecord[];
   }
 
   // 创建工作内容
-  async create(body: { category_id: string; sub_category_id?: string; content: string; hours?: number; record_date: string }): Promise<WorkRecord> {
+  async create(body: { category_id: string; sub_category_id?: string; content: string; hours?: number; record_date: string; user_id?: string }): Promise<WorkRecord> {
     const insertData: any = {
       category_id: body.category_id,
       content: body.content,
@@ -74,10 +87,13 @@ export class WorkRecordsService {
     if (body.sub_category_id) {
       insertData.sub_category_id = body.sub_category_id;
     }
+    if (body.user_id) {
+      insertData.user_id = body.user_id;
+    }
     const { data, error } = await this.client
       .from('work_records')
       .insert(insertData)
-      .select('id, category_id, sub_category_id, content, hours, record_date, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, hours, record_date, user_id, created_at, updated_at')
       .single();
     if (error) throw new Error(`创建工作内容失败: ${error.message}`);
     return data as WorkRecord;
@@ -97,7 +113,7 @@ export class WorkRecordsService {
       .from('work_records')
       .update(updateData)
       .eq('id', id)
-      .select('id, category_id, sub_category_id, content, hours, record_date, created_at, updated_at')
+      .select('id, category_id, sub_category_id, content, hours, record_date, user_id, created_at, updated_at')
       .single();
     if (error) throw new Error(`更新工作内容失败: ${error.message}`);
     return data as WorkRecord;

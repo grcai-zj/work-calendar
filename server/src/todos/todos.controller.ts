@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, Query, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Put, Delete, Body, Param, Query, Headers, HttpCode } from '@nestjs/common';
 import { TodosService } from './todos.service';
 
 @Controller('todos')
@@ -16,6 +16,7 @@ export class TodosController {
     @Query('sort_by') sortBy?: string,
     @Query('sort_order') sortOrder?: string,
     @Query('parent_todo_id') parentTodoId?: string,
+    @Headers('x-user-id') userId?: string,
   ) {
     const data = await this.todosService.findAll({
       status,
@@ -26,29 +27,36 @@ export class TodosController {
       sort_by: sortBy,
       sort_order: sortOrder,
       parent_todo_id: parentTodoId,
+      userId,
     });
     return { code: 200, msg: 'success', data };
   }
 
   @Get('pending')
   @HttpCode(200)
-  async findPendingByDeadline(@Query('deadline') deadline: string) {
-    const data = await this.todosService.findPendingByDeadline(deadline);
+  async findPendingByDeadline(
+    @Query('deadline') deadline: string,
+    @Headers('x-user-id') userId?: string,
+  ) {
+    const data = await this.todosService.findPendingByDeadline(deadline, userId);
     return { code: 200, msg: 'success', data };
   }
 
   @Post()
   @HttpCode(200)
-  async create(@Body() body: {
-    category_id: string;
-    sub_category_id?: string;
-    content: string;
-    related_person?: string;
-    priority?: string;
-    deadline?: string;
-    parent_todo_id?: string;
-  }) {
-    const data = await this.todosService.create(body);
+  async create(
+    @Body() body: {
+      category_id: string;
+      sub_category_id?: string;
+      content: string;
+      related_person?: string;
+      priority?: string;
+      deadline?: string;
+      parent_todo_id?: string;
+    },
+    @Headers('x-user-id') userId?: string,
+  ) {
+    const data = await this.todosService.create({ ...body, user_id: userId });
     return { code: 200, msg: 'success', data };
   }
 
