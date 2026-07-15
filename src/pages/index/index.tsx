@@ -506,8 +506,8 @@ export default function Index() {
               {currentYear}年{currentMonth + 1}月
             </Text>
             <View className="flex flex-row gap-1">
-              <Button variant="outline" size="sm" onClick={prevMonth}>
-                <ChevronLeft size={16} color="#6b7280" />
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={prevMonth}>
+                <ChevronLeft size={14} color="#6b7280" />
               </Button>
               <Button
                 variant="outline"
@@ -521,8 +521,8 @@ export default function Index() {
               >
                 <Text className="text-xs text-gray-600">今天</Text>
               </Button>
-              <Button variant="outline" size="sm" onClick={nextMonth}>
-                <ChevronRight size={16} color="#6b7280" />
+              <Button variant="outline" size="icon" className="h-7 w-7" onClick={nextMonth}>
+                <ChevronRight size={14} color="#6b7280" />
               </Button>
             </View>
           </View>
