@@ -175,7 +175,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-lg">
+        <DialogContent className="max-w-lg max-h-[80vh]">
           <DialogHeader>
             <DialogTitle>分类管理</DialogTitle>
           </DialogHeader>
@@ -208,7 +208,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                 <Text className="block text-sm text-gray-400 mt-2">暂无分类</Text>
               </View>
             ) : (
-              <ScrollView className="max-h-96">
+              <ScrollView style={{ maxHeight: "60vh" }}>
                 <View className="gap-3">
                   {categories.map((cat) => (
                     <Card key={cat.id}>

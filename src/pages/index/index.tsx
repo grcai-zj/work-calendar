@@ -114,9 +114,10 @@ export default function Index() {
   const [showPendingTodos, setShowPendingTodos] = useState(true)
   const [showCompleted, setShowCompleted] = useState(false)
   const [showCategoryManagement, setShowCategoryManagement] = useState(false)
+  const [editingWork, setEditingWork] = useState<WorkRecord | null>(null)
+  const [editingTodo, setEditingTodo] = useState<TodoItem | null>(null)
   const [completedPage, setCompletedPage] = useState(1)
   const COMPLETED_PAGE_SIZE = 10
-  const [detailItem, setDetailItem] = useState<{ type: 'work' | 'todo'; data: WorkRecord | TodoItem } | null>(null)
 
   // Drawer states
   const [showAddWork, setShowAddWork] = useState(false)
@@ -589,7 +590,7 @@ export default function Index() {
                 ) : (
                   <View className="gap-2">
                     {workRecords.map((record) => (
-                      <Card key={record.id} onClick={() => setDetailItem({ type: 'work', data: record })}>
+                      <Card key={record.id} onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
                         <CardContent className="p-3">
                           <View className="flex flex-row items-start justify-between">
                             <View className="flex-1">
@@ -697,7 +698,7 @@ export default function Index() {
                               <SwipeableItem
                                 key={todo.id}
                                 actions={
-                                  <View className="flex flex-row h-full items-stretch">
+                                  <View className="flex flex-row h-full items-stretch justify-end">
                                     <View
                                       className="flex-1 bg-blue-500 flex items-center justify-center aspect-square"
                                       onClick={() => {
@@ -716,7 +717,7 @@ export default function Index() {
                                   </View>
                                 }
                               >
-                                <Card className="rounded-none" onClick={() => setDetailItem({ type: 'todo', data: todo })}>
+                                <Card className="rounded-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
@@ -828,10 +829,10 @@ export default function Index() {
       </View>
 
       {/* ===== Add Work Record Drawer ===== */}
-      <Drawer open={showAddWork} onOpenChange={setShowAddWork}>
+      <Drawer open={showAddWork} onOpenChange={(open) => { setShowAddWork(open); if (!open) setEditingWork(null) }}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>记录工作内容</DrawerTitle>
+            <DrawerTitle>{editingWork ? "编辑工作内容" : "记录工作内容"}</DrawerTitle>
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
@@ -890,10 +891,10 @@ export default function Index() {
       </Drawer>
 
       {/* ===== Add Todo Drawer ===== */}
-      <Drawer open={showAddTodo} onOpenChange={setShowAddTodo}>
+      <Drawer open={showAddTodo} onOpenChange={(open) => { setShowAddTodo(open); if (!open) setEditingTodo(null) }}>
         <DrawerContent>
           <DrawerHeader>
-            <DrawerTitle>添加待办事项</DrawerTitle>
+            <DrawerTitle>{editingTodo ? "编辑待办事项" : "添加待办事项"}</DrawerTitle>
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
@@ -1060,109 +1061,6 @@ export default function Index() {
         onCategoriesChanged={() => fetchCategories()}
       />
 
-      {/* Detail dialog */}
-      <Dialog open={!!detailItem} onOpenChange={() => setDetailItem(null)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>
-              {detailItem?.type === 'work' ? '工作内容详情' : '待办事项详情'}
-            </DialogTitle>
-          </DialogHeader>
-          <View className="py-4 gap-3">
-            {detailItem && detailItem.type === 'work' ? (
-              (() => {
-                const data = detailItem.data as WorkRecord
-                return (
-                  <>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">大类：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.category_name}</Text>
-                    </View>
-                    {data.sub_category_name && (
-                      <View className="flex flex-row gap-2">
-                        <Text className="text-sm text-gray-500 w-20">小类：</Text>
-                        <Text className="text-sm text-gray-800 flex-1">{data.sub_category_name}</Text>
-                      </View>
-                    )}
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">内容：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.content}</Text>
-                    </View>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">耗时：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.hours} 小时</Text>
-                    </View>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">日期：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.record_date}</Text>
-                    </View>
-                  </>
-                )
-              })()
-            ) : detailItem && detailItem.type === 'todo' ? (
-              (() => {
-                const data = detailItem.data as TodoItem
-                return (
-                  <>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">大类：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.category_name}</Text>
-                    </View>
-                    {data.sub_category_name && (
-                      <View className="flex flex-row gap-2">
-                        <Text className="text-sm text-gray-500 w-20">小类：</Text>
-                        <Text className="text-sm text-gray-800 flex-1">{data.sub_category_name}</Text>
-                      </View>
-                    )}
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">内容：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.content}</Text>
-                    </View>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">优先级：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{PRIORITY_MAP[data.priority]?.label || data.priority}</Text>
-                    </View>
-                    {data.related_person && (
-                      <View className="flex flex-row gap-2">
-                        <Text className="text-sm text-gray-500 w-20">相关人员：</Text>
-                        <Text className="text-sm text-gray-800 flex-1">{data.related_person}</Text>
-                      </View>
-                    )}
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">截止时间：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">{data.deadline || '无'}</Text>
-                    </View>
-                    <View className="flex flex-row gap-2">
-                      <Text className="text-sm text-gray-500 w-20">状态：</Text>
-                      <Text className="text-sm text-gray-800 flex-1">
-                        {data.status === 'completed' ? '已完成' :
-                         data.status === 'in_progress' ? '进行中' : '未开始'}
-                      </Text>
-                    </View>
-                    {data.completed_at && (
-                      <View className="flex flex-row gap-2">
-                        <Text className="text-sm text-gray-500 w-20">完成时间：</Text>
-                        <Text className="text-sm text-gray-800 flex-1">{data.completed_at}</Text>
-                      </View>
-                    )}
-                    {data.hours && (
-                      <View className="flex flex-row gap-2">
-                        <Text className="text-sm text-gray-500 w-20">耗时：</Text>
-                        <Text className="text-sm text-gray-800 flex-1">{data.hours} 小时</Text>
-                      </View>
-                    )}
-                  </>
-                )
-              })()
-            ) : null}
-          </View>
-          <DialogFooter>
-            <Button onClick={() => setDetailItem(null)}>
-              <Text className="text-white">关闭</Text>
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </ScrollView>
   )
 }
