@@ -599,9 +599,21 @@ export default function Index() {
                 ) : (
                   <View className="gap-2">
                     {workRecords.map((record) => (
-                      <Card key={record.id} onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
-                        <CardContent className="p-3">
-                          <View className="flex flex-row items-start justify-between">
+                      <SwipeableItem
+                        key={record.id}
+                        actions={
+                          <View className="flex flex-row h-full items-stretch">
+                            <View
+                              className="h-full flex-1 bg-red-500 flex items-center justify-center"
+                              onClick={() => handleDeleteWork(record.id)}
+                            >
+                              <Trash2 size={20} color="#fff" />
+                            </View>
+                          </View>
+                        }
+                      >
+                        <Card onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
+                          <CardContent className="p-3">
                             <View className="flex-1">
                               <View className="flex flex-row items-center gap-2 mb-1">
                                 <Badge variant="secondary" className="bg-blue-50">
@@ -621,12 +633,9 @@ export default function Index() {
                                 </View>
                               )}
                             </View>
-                            <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); handleDeleteWork(record.id); }}>
-                              <Trash2 size={14} color="#9ca3af" />
-                            </Button>
-                          </View>
-                        </CardContent>
-                      </Card>
+                          </CardContent>
+                        </Card>
+                      </SwipeableItem>
                     ))}
                     <View className="flex flex-row items-center justify-end gap-1">
                       <Clock size={14} color="#6b7280" />
