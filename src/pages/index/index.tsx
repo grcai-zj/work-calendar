@@ -6,7 +6,6 @@ import {
   ChevronRight,
   Plus,
   Clock,
-  Trash2,
   ListChecks,
   Briefcase,
   ChevronDown,
@@ -26,7 +25,6 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@
 import { Network } from '@/network'
 import { CategoryCombobox } from '@/components/category-combobox'
 import { DatePickerDialog } from '@/components/date-picker-dialog'
-import { SwipeableItem } from '@/components/swipeable-item'
 import { StatusIcon } from '@/components/status-icon'
 import { CategoryManagement } from '@/components/category-management'
 import './index.css'
@@ -599,21 +597,8 @@ export default function Index() {
                 ) : (
                   <View className="gap-2">
                     {workRecords.map((record) => (
-                      <SwipeableItem
-                        key={record.id}
-                        actionWidth={70}
-                        actions={
-                          <View className="flex flex-row h-full items-stretch justify-end">
-                            <View
-                              className="h-full w-[70px] bg-red-500 flex items-center justify-center"
-                              onClick={() => handleDeleteWork(record.id)}
-                            >
-                              <Trash2 size={20} color="#fff" />
-                            </View>
-                          </View>
-                        }
-                      >
-                        <Card onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
+                      <View key={record.id} className="flex flex-row items-center gap-2">
+                        <Card className="flex-1" onClick={() => { setEditingWork(record); setShowAddWork(true) }}>
                           <CardContent className="p-3">
                             <View className="flex-1">
                               <View className="flex flex-row items-center gap-2 mb-1">
@@ -636,7 +621,13 @@ export default function Index() {
                             </View>
                           </CardContent>
                         </Card>
-                      </SwipeableItem>
+                        <View
+                          className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center"
+                          onClick={() => handleDeleteWork(record.id)}
+                        >
+                          <Text className="text-red-500 text-lg font-bold">-</Text>
+                        </View>
+                      </View>
                     ))}
                     <View className="flex flex-row items-center justify-end gap-1">
                       <Clock size={14} color="#6b7280" />
@@ -703,31 +694,8 @@ export default function Index() {
                             const hasChildren = todo.children && todo.children.length > 0
                             const completedCount = todo.children?.filter(c => c.status === 'completed').length || 0
                             return (
-                              <SwipeableItem
-                                key={todo.id}
-                                actions={
-                                  <View className="flex flex-row h-full items-stretch justify-end">
-                                    <View
-                                      className="h-full bg-blue-500 flex items-center justify-center"
-                                      style={{ width: '70px' }}
-                                      onClick={() => {
-                                        setSubItemParentId(todo.id)
-                                        setShowAddSubItem(true)
-                                      }}
-                                    >
-                                      <Plus size={20} color="#ffffff" />
-                                    </View>
-                                    <View
-                                      className="h-full bg-red-500 flex items-center justify-center"
-                                      style={{ width: '70px' }}
-                                      onClick={() => handleDeleteTodo(todo.id)}
-                                    >
-                                      <Trash2 size={20} color="#ffffff" />
-                                    </View>
-                                  </View>
-                                }
-                              >
-                                <Card className="rounded-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
+                              <View key={todo.id} className="flex flex-row items-stretch gap-2">
+                                <Card className="flex-1 rounded-none" onClick={() => { setEditingTodo(todo); setShowAddTodo(true) }}>
                                   <CardContent className="p-3">
                                     <View className="flex flex-row items-start gap-2">
                                       {/* Status icon */}
@@ -785,16 +753,8 @@ export default function Index() {
                                         {isExpanded && (
                                           <View className="mt-2 ml-4 gap-2">
                                             {todo.children!.map((child) => (
-                                              <SwipeableItem
-                                                key={child.id}
-                                                actionWidth={70}
-                                                actions={
-                                                  <View className="h-full bg-red-500 flex items-center justify-center" style={{ width: '70px' }} onClick={() => handleDeleteTodo(child.id)}>
-                                                    <Trash2 size={18} color="#ffffff" />
-                                                  </View>
-                                                }
-                                              >
-                                                <View className="flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
+                                              <View key={child.id} className="flex flex-row items-center gap-2">
+                                                  <View className="flex-1 flex flex-row items-center gap-2 py-1 bg-gray-50 rounded-lg px-2">
                                                   <View onClick={(e) => e.stopPropagation()}>
                                                     <StatusIcon status={child.status} size={16} onClick={() => handleToggleStatus(child)} />
                                                   </View>
@@ -805,8 +765,14 @@ export default function Index() {
                                                   >
                                                     {child.content}
                                                   </Text>
+                                                  </View>
+                                                  <View
+                                                    className="w-6 h-6 bg-red-50 rounded-full flex items-center justify-center"
+                                                    onClick={() => handleDeleteTodo(child.id)}
+                                                  >
+                                                    <Text className="text-red-500 text-sm font-bold">-</Text>
+                                                  </View>
                                                 </View>
-                                              </SwipeableItem>
                                             ))}
                                           </View>
                                         )}
@@ -814,7 +780,24 @@ export default function Index() {
                                     )}
                                   </CardContent>
                                 </Card>
-                              </SwipeableItem>
+                                <View className="flex flex-col justify-end gap-2">
+                                  <View
+                                    className="w-8 h-8 bg-red-50 rounded-full flex items-center justify-center"
+                                    onClick={() => handleDeleteTodo(todo.id)}
+                                  >
+                                    <Text className="text-red-500 text-lg font-bold">-</Text>
+                                  </View>
+                                  <View
+                                    className="w-8 h-8 bg-blue-50 rounded-full flex items-center justify-center"
+                                    onClick={() => {
+                                      setSubItemParentId(todo.id)
+                                      setShowAddSubItem(true)
+                                    }}
+                                  >
+                                    <Text className="text-blue-500 text-lg font-bold">+</Text>
+                                  </View>
+                                </View>
+                              </View>
                             )
                           })}
                         </View>
