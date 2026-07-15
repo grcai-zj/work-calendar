@@ -105,8 +105,7 @@ export default function Index() {
   const [activeTab, setActiveTab] = useState('work')
 
   // Data states
-  const [workCategories, setWorkCategories] = useState<CategoryItem[]>([])
-  const [todoCategories, setTodoCategories] = useState<CategoryItem[]>([])
+  const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
   const [pendingTodos, setPendingTodos] = useState<TodoItem[]>([])
@@ -139,14 +138,10 @@ export default function Index() {
   // ========== Data Fetching ==========
   const fetchCategories = useCallback(async () => {
     try {
-      const [workRes, todoRes] = await Promise.all([
-        Network.request({ url: '/api/categories/tree?type=work' }),
-        Network.request({ url: '/api/categories/tree?type=todo' }),
-      ])
-      console.log('[API] categories work:', workRes.data)
-      console.log('[API] categories todo:', todoRes.data)
-      setWorkCategories(workRes.data?.data || [])
-      setTodoCategories(todoRes.data?.data || [])
+      // Fetch all categories (both work and todo share the same categories)
+      const res = await Network.request({ url: '/api/categories/tree' })
+      console.log('[API] categories:', res.data)
+      setCategories(res.data?.data || [])
     } catch (e) {
       console.error('Failed to fetch categories', e)
     }
@@ -219,8 +214,8 @@ export default function Index() {
   const calendarDays = getCalendarDays(currentYear, currentMonth)
 
   // ========== Category helpers ==========
-  const selectedWorkCategory = workCategories.find(c => c.id === workForm.category_id)
-  const selectedTodoCategory = todoCategories.find(c => c.id === todoForm.category_id)
+  const selectedWorkCategory = categories.find(c => c.id === workForm.category_id)
+  const selectedTodoCategory = categories.find(c => c.id === todoForm.category_id)
   const workSubCategories = selectedWorkCategory?.children || []
   const todoSubCategories = selectedTodoCategory?.children || []
 
@@ -808,12 +803,13 @@ export default function Index() {
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
-              categories={workCategories}
+              categories={categories}
               value={workForm.category_id}
               onValueChange={(val) => setWorkForm({ ...workForm, category_id: val, sub_category_id: '' })}
               placeholder="选择或输入大类"
               type="work"
               label="大类"
+              onCategoryCreated={() => fetchCategories()}
             />
             <CategoryCombobox
               categories={workSubCategories}
@@ -823,6 +819,7 @@ export default function Index() {
               type="work"
               parentId={workForm.category_id || undefined}
               label="小类"
+              onCategoryCreated={() => fetchCategories()}
             />
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>
@@ -868,12 +865,13 @@ export default function Index() {
           </DrawerHeader>
           <View className="px-4 gap-4">
             <CategoryCombobox
-              categories={todoCategories}
+              categories={categories}
               value={todoForm.category_id}
               onValueChange={(val) => setTodoForm({ ...todoForm, category_id: val, sub_category_id: '' })}
               placeholder="选择或输入大类"
               type="todo"
               label="大类"
+              onCategoryCreated={() => fetchCategories()}
             />
             <CategoryCombobox
               categories={todoSubCategories}
@@ -883,6 +881,7 @@ export default function Index() {
               type="todo"
               parentId={todoForm.category_id || undefined}
               label="小类"
+              onCategoryCreated={() => fetchCategories()}
             />
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>
@@ -915,8 +914,8 @@ export default function Index() {
                 </SelectTrigger>
                 <SelectContent>
                   {Object.entries(PRIORITY_MAP).map(([key, val]) => (
-                    <SelectItem key={key} value={key}>
-                      <Text className={`text-sm ${val.color}`}>{val.label}</Text>
+                    <SelectItem key={key} value={key} className={val.color}>
+                      {val.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

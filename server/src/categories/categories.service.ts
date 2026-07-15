@@ -32,23 +32,29 @@ export class CategoriesService {
   }
 
   // 获取大类及其小类（树形结构）
-  async findTree(type: string): Promise<any[]> {
-    const { data: parents, error: parentError } = await this.client
+  async findTree(type?: string): Promise<any[]> {
+    let parentQuery = this.client
       .from('categories')
       .select('id, parent_id, name, type, level, sort_order, created_at')
-      .eq('type', type)
       .eq('level', 1)
       .order('sort_order')
       .order('created_at');
+    if (type) {
+      parentQuery = parentQuery.eq('type', type);
+    }
+    const { data: parents, error: parentError } = await parentQuery;
     if (parentError) throw new Error(`查询大类失败: ${parentError.message}`);
 
-    const { data: children, error: childError } = await this.client
+    let childQuery = this.client
       .from('categories')
       .select('id, parent_id, name, type, level, sort_order, created_at')
-      .eq('type', type)
       .eq('level', 2)
       .order('sort_order')
       .order('created_at');
+    if (type) {
+      childQuery = childQuery.eq('type', type);
+    }
+    const { data: children, error: childError } = await childQuery;
     if (childError) throw new Error(`查询小类失败: ${childError.message}`);
 
     const result = (parents || []).map((parent) => ({

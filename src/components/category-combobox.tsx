@@ -22,7 +22,7 @@ interface CategoryComboboxProps {
   type: 'work' | 'todo'
   parentId?: string | null
   label: string
-  onCategoryCreated?: () => void
+  onCategoryCreated?: (newCategory: CategoryItem) => void
 }
 
 export function CategoryCombobox({
@@ -37,8 +37,11 @@ export function CategoryCombobox({
 }: CategoryComboboxProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
+  const [newlyCreatedId, setNewlyCreatedId] = useState<string | null>(null)
 
-  const selectedItem = categories.find((c) => c.id === value)
+  // Find selected item - check both categories and newly created
+  const selectedItem = categories.find((c) => c.id === value) ||
+    (newlyCreatedId === value ? { id: value, name: searchText, parent_id: parentId, type, level: parentId ? 2 : 1 } as CategoryItem : null)
 
   useEffect(() => {
     if (!isOpen) setSearchText('')
@@ -55,20 +58,30 @@ export function CategoryCombobox({
       if (parentId) body.parent_id = parentId
       const res = await Network.request({ url: '/api/categories', method: 'POST', data: body })
       console.log('[API] create category:', res.data)
-      const newId = res.data?.data?.id
-      if (newId) {
-        onValueChange(newId)
+      const newCategory = res.data?.data
+      if (newCategory?.id) {
+        // Set the newly created ID and name for display
+        setNewlyCreatedId(newCategory.id)
+        // Select the new category
+        onValueChange(newCategory.id)
+        // Notify parent to refresh categories list
+        if (onCategoryCreated) {
+          onCategoryCreated(newCategory)
+        }
       }
       setSearchText('')
       setIsOpen(false)
-      // Notify parent to refresh categories
-      if (onCategoryCreated) {
-        onCategoryCreated()
-      }
     } catch (e) {
       console.error('Failed to create category', e)
     }
   }
+
+  // Reset newlyCreatedId when categories are refreshed
+  useEffect(() => {
+    if (newlyCreatedId && categories.some(c => c.id === newlyCreatedId)) {
+      setNewlyCreatedId(null)
+    }
+  }, [categories, newlyCreatedId])
 
   return (
     <View className="relative">
@@ -105,6 +118,7 @@ export function CategoryCombobox({
                   className={`px-3 py-2 ${value === item.id ? 'bg-blue-50' : ''}`}
                   onClick={() => {
                     onValueChange(item.id)
+                    setNewlyCreatedId(null)
                     setIsOpen(false)
                     setSearchText('')
                   }}

@@ -15,8 +15,8 @@ export class CategoriesController {
 
   @Get('tree')
   @HttpCode(200)
-  async findTree(@Query('type') type: string) {
-    const data = await this.categoriesService.findTree(type || 'work');
+  async findTree(@Query('type') type?: string) {
+    const data = await this.categoriesService.findTree(type);
     return { code: 200, msg: 'success', data };
   }
 
