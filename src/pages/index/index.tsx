@@ -668,7 +668,7 @@ export default function Index() {
             <TabsContent value="todo">
               <View className="gap-3">
                 {/* Add button + Toggle completed */}
-                <View className="flex flex-row items-center justify-end gap-2">
+                <View className="flex flex-row items-center justify-between gap-2">
                   <Button
                     variant={showCompleted ? 'default' : 'outline'}
                     size="sm"
