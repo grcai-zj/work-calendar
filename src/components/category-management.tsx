@@ -253,7 +253,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                             <FolderOpen size={18} color="#3b82f6" />
                             <Text className="text-sm font-medium text-gray-800">{cat.name}</Text>
                           </View>
-                          <View className="flex flex-row items-center gap-2">
+                          <View className="flex flex-row items-center gap-0">
                             <Button
                               size="sm"
                               variant="ghost"
@@ -291,7 +291,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged }: 
                                   />
                                   <Text className="text-sm text-gray-600">{sub.name}</Text>
                                 </View>
-                                <View className="flex flex-row items-center gap-2">
+                                <View className="flex flex-row items-center gap-0">
                                   <Button
                                     size="sm"
                                     variant="ghost"
