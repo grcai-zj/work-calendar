@@ -1,7 +1,6 @@
 {
   "buildCommand": "pnpm build:web",
   "outputDirectory": "dist-web",
-  "framework": "taro",
   "rewrites": [
     { "source": "/(.*)", "destination": "/index.html" }
   ]
