@@ -10,286 +10,168 @@
             padding: 0;
             box-sizing: border-box;
         }
-        
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 40px;
+            padding: 20px;
         }
-        
         .slide {
             background: white;
             border-radius: 20px;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
-            max-width: 1400px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1200px;
             width: 100%;
-            padding: 60px;
+            padding: 40px;
         }
-        
         .title {
             text-align: center;
-            font-size: 36px;
-            font-weight: 700;
-            color: #1a202c;
-            margin-bottom: 50px;
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 30px;
         }
-        
         .content {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 40px;
+            gap: 30px;
+            margin-bottom: 30px;
         }
-        
         .workflow {
-            background: #f7fafc;
-            border-radius: 16px;
-            padding: 30px;
-            border: 2px solid #e2e8f0;
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
         }
-        
+        .workflow-1 {
+            border-left-color: #4CAF50;
+        }
+        .workflow-2 {
+            border-left-color: #2196F3;
+        }
         .workflow-title {
             font-size: 20px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
         }
-        
-        .workflow-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
+        .workflow-1 .workflow-title {
+            color: #4CAF50;
         }
-        
-        .miniapp-icon {
-            background: #48bb78;
-            color: white;
+        .workflow-2 .workflow-title {
+            color: #2196F3;
         }
-        
-        .web-icon {
-            background: #4299e1;
-            color: white;
-        }
-        
         .steps {
             list-style: none;
         }
-        
         .step {
             display: flex;
-            align-items: flex-start;
-            gap: 15px;
-            margin-bottom: 15px;
-            padding: 12px;
-            background: white;
-            border-radius: 10px;
-            border-left: 4px solid #cbd5e0;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #555;
         }
-        
-        .step-number {
-            width: 28px;
-            height: 28px;
+        .step-icon {
+            width: 30px;
+            height: 30px;
             border-radius: 50%;
-            background: #4a5568;
-            color: white;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 14px;
-            font-weight: 600;
+            margin-right: 12px;
+            font-weight: bold;
+            color: white;
             flex-shrink: 0;
         }
-        
-        .step-content {
-            flex: 1;
+        .workflow-1 .step-icon {
+            background: #4CAF50;
         }
-        
-        .step-title {
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 4px;
+        .workflow-2 .step-icon {
+            background: #2196F3;
         }
-        
-        .step-desc {
-            font-size: 14px;
-            color: #718096;
-        }
-        
         .screenshot-section {
-            background: #edf2f7;
-            border-radius: 16px;
-            padding: 30px;
             text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 15px;
         }
-        
         .screenshot-title {
             font-size: 18px;
-            font-weight: 600;
-            color: #2d3748;
-            margin-bottom: 20px;
-        }
-        
-        .screenshot-placeholder {
-            background: white;
-            border: 2px dashed #cbd5e0;
-            border-radius: 12px;
-            padding: 60px 40px;
-            color: #a0aec0;
-        }
-        
-        .screenshot-placeholder .icon {
-            font-size: 48px;
+            font-weight: bold;
+            color: #666;
             margin-bottom: 15px;
         }
-        
-        .screenshot-placeholder .text {
-            font-size: 16px;
+        .screenshot {
+            max-width: 400px;
+            max-height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
-        
         .highlight {
-            background: linear-gradient(120deg, #fef3c7 0%, #fde68a 100%);
-            padding: 2px 8px;
+            background: #fff3cd;
+            padding: 2px 6px;
             border-radius: 4px;
-            font-weight: 600;
-        }
-        
-        .coze-badge {
-            display: inline-block;
-            background: #667eea;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .github-badge {
-            display: inline-block;
-            background: #333;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
-        }
-        
-        .vercel-badge {
-            display: inline-block;
-            background: #000;
-            color: white;
-            padding: 4px 12px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            margin-left: 8px;
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
     <div class="slide">
-        <h1 class="title"> Coze 编码开发工作流</h1>
+        <h1 class="title">Coze 编码开发工作流</h1>
         
         <div class="content">
-            <!-- 小程序工作流 -->
-            <div class="workflow">
-                <div class="workflow-title">
-                    <div class="workflow-icon miniapp-icon"></div>
-                    工作流一：开发小程序
-                </div>
+            <div class="workflow workflow-1">
+                <div class="workflow-title">📱 工作流一：开发小程序</div>
                 <ul class="steps">
                     <li class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <div class="step-title">Coze 编码 <span class="coze-badge">Coze</span></div>
-                            <div class="step-desc">使用 Coze 编码助手，通过自然语言描述需求</div>
-                        </div>
+                        <span class="step-icon">1</span>
+                        <span>Coze 编码工具</span>
                     </li>
                     <li class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <div class="step-title">自动生成 Taro 代码</div>
-                            <div class="step-desc">自动生成跨端小程序代码（微信/抖音/H5）</div>
-                        </div>
+                        <span class="step-icon">2</span>
+                        <span>自动生成 Taro 跨端代码</span>
                     </li>
                     <li class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <div class="step-title">实时预览与调试</div>
-                            <div class="step-desc">热更新预览，即时查看效果</div>
-                        </div>
+                        <span class="step-icon">3</span>
+                        <span>实时预览调试</span>
                     </li>
                     <li class="step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <div class="step-title">小程序发布</div>
-                            <div class="step-desc">构建小程序包，提交到平台审核</div>
-                        </div>
+                        <span class="step-icon">4</span>
+                        <span>小程序发布上线</span>
                     </li>
                 </ul>
             </div>
             
-            <!-- 网页版工作流 -->
-            <div class="workflow">
-                <div class="workflow-title">
-                    <div class="workflow-icon web-icon">🌐</div>
-                    工作流二：开发网页版
-                </div>
+            <div class="workflow workflow-2">
+                <div class="workflow-title">🌐 工作流二：开发网页版</div>
                 <ul class="steps">
                     <li class="step">
-                        <div class="step-number">1</div>
-                        <div class="step-content">
-                            <div class="step-title">Coze 编码 <span class="coze-badge">Coze</span></div>
-                            <div class="step-desc">复用小程序代码，适配网页版登录方式</div>
-                        </div>
+                        <span class="step-icon">1</span>
+                        <span>Coze 编码工具</span>
                     </li>
                     <li class="step">
-                        <div class="step-number">2</div>
-                        <div class="step-content">
-                            <div class="step-title">推送到 GitHub <span class="github-badge">GitHub</span></div>
-                            <div class="step-desc">Coze 自动将项目推送到 GitHub 仓库</div>
-                        </div>
+                        <span class="step-icon">2</span>
+                        <span><span class="highlight">推送项目到 GitHub</span></span>
                     </li>
                     <li class="step">
-                        <div class="step-number">3</div>
-                        <div class="step-content">
-                            <div class="step-title">Claude Code 部署 <span class="vercel-badge">Vercel</span></div>
-                            <div class="step-desc">使用 Claude Code 将项目部署到 Vercel</div>
-                        </div>
+                        <span class="step-icon">3</span>
+                        <span><span class="highlight">Claude Code 部署到 Vercel</span></span>
                     </li>
                     <li class="step">
-                        <div class="step-number">4</div>
-                        <div class="step-content">
-                            <div class="step-title">网页版上线</div>
-                            <div class="step-desc">获得公网 URL，用户可直接访问</div>
-                        </div>
+                        <span class="step-icon">4</span>
+                        <span>网页版上线访问</span>
                     </li>
                 </ul>
             </div>
         </div>
         
-        <!-- 截图区域 -->
         <div class="screenshot-section">
-            <div class="screenshot-title">📸 工具界面截图</div>
-            <div class="screenshot-placeholder">
-                <div class="icon">🖥️</div>
-                <div class="text">在此插入 Coze 编码工具界面截图</div>
-                <div class="text" style="font-size: 14px; margin-top: 10px; color: #cbd5e0;">
-                    展示日历工作管理小程序的界面
-                </div>
-            </div>
+            <div class="screenshot-title"> 工具界面截图</div>
+            <img src="screenshot.png" alt="工作日历小程序界面" class="screenshot">
         </div>
     </div>
 </body>
