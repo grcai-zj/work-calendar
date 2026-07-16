@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coze 编码开发工作流</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .slide {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 1200px;
+            width: 100%;
+            padding: 40px;
+        }
+        .title {
+            text-align: center;
+            font-size: 32px;
+            font-weight: bold;
+            color: #1a1a2e;
+            margin-bottom: 30px;
+        }
+        .content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        .workflow {
+            background: #f8f9fa;
+            border-radius: 15px;
+            padding: 25px;
+            border-left: 5px solid;
+        }
+        .workflow-1 {
+            border-left-color: #4CAF50;
+        }
+        .workflow-2 {
+            border-left-color: #2196F3;
+        }
+        .workflow-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #333;
+        }
+        .workflow-1 .workflow-title {
+            color: #4CAF50;
+        }
+        .workflow-2 .workflow-title {
+            color: #2196F3;
+        }
+        .steps {
+            list-style: none;
+        }
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 16px;
+            color: #555;
+        }
+        .step-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 12px;
+            font-weight: bold;
+            color: white;
+            flex-shrink: 0;
+        }
+        .workflow-1 .step-icon {
+            background: #4CAF50;
+        }
+        .workflow-2 .step-icon {
+            background: #2196F3;
+        }
+        .screenshot-section {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: #f0f0f0;
+            border-radius: 15px;
+        }
+        .screenshot-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #666;
+            margin-bottom: 15px;
+        }
+        .screenshot {
+            max-width: 400px;
+            max-height: 600px;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <h1 class="title">Coze 编码开发工作流</h1>
+        
+        <div class="content">
+            <div class="workflow workflow-1">
+                <div class="workflow-title">📱 工作流一：开发小程序</div>
+                <ul class="steps">
+                    <li class="step">
+                        <span class="step-icon">1</span>
+                        <span>Coze 编码工具</span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">2</span>
+                        <span>自动生成 Taro 跨端代码</span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">3</span>
+                        <span>实时预览调试</span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">4</span>
+                        <span>小程序发布上线</span>
+                    </li>
+                </ul>
+            </div>
+            
+            <div class="workflow workflow-2">
+                <div class="workflow-title">🌐 工作流二：开发网页版</div>
+                <ul class="steps">
+                    <li class="step">
+                        <span class="step-icon">1</span>
+                        <span>Coze 编码工具</span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">2</span>
+                        <span><span class="highlight">推送项目到 GitHub</span></span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">3</span>
+                        <span><span class="highlight">Claude Code 部署到 Vercel</span></span>
+                    </li>
+                    <li class="step">
+                        <span class="step-icon">4</span>
+                        <span>网页版上线访问</span>
+                    </li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="screenshot-section">
+            <div class="screenshot-title"> 工具界面截图</div>
+            <img src="assets/微信图片_20260716135553_285_622.jpg" alt="工作日历小程序界面" class="screenshot">
+        </div>
+    </div>
+</body>
+</html>
