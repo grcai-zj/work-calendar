@@ -38,9 +38,14 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged, us
   const [showHidden, setShowHidden] = useState(false)
 
   const fetchCategories = async () => {
+    // 未登录时清空数据
+    if (!userId) {
+      setCategories([])
+      return
+    }
     setLoading(true)
     try {
-      const header = userId ? { 'x-user-id': userId } : {}
+      const header = { 'x-user-id': userId }
       const res = await Network.request({ url: '/api/categories/tree', header })
       setCategories(res.data?.data || [])
     } catch (e) {
@@ -54,7 +59,7 @@ export function CategoryManagement({ open, onOpenChange, onCategoriesChanged, us
     if (open) {
       fetchCategories()
     }
-  }, [open])
+  }, [open, userId])
 
   // Check if category name already exists
   const checkDuplicate = (name: string, parentId: string | null): CategoryItem | null => {
