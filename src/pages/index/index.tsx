@@ -300,7 +300,7 @@ export default function Index() {
         url: '/api/users/login',
         method: 'POST',
         data: {
-          openid: loginRes.code, // 实际项目中应该用 code 换取 openid
+          code: loginRes.code, // 实际项目中应该用 code 换取 openid
           nickname: '用户',
         },
       })
