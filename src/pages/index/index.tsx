@@ -1324,12 +1324,11 @@ export default function Index() {
                 </Button>
               </View>
             ) : isMiniApp ? (
-              <View className="flex flex-col gap-4">
+              <View className="flex flex-col gap-4 items-center">
                 <Text className="block text-sm text-gray-500 text-center">
                   登录后可以保存您的工作记录和待办事项
                 </Text>
                 <Button
-                  className="w-full"
                   onClick={handleLogin}
                 >
                   <Text>微信登录</Text>
