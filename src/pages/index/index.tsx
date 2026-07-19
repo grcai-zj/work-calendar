@@ -313,6 +313,7 @@ export default function Index() {
         const user = res.data.data as UserInfo
         setCurrentUser(user)
         Taro.setStorageSync('userId', user.id)
+        Taro.setStorageSync('lastLoginTime', Date.now())
         setShowUserDialog(false)
         Taro.showToast({ title: '登录成功', icon: 'success' })
       }
@@ -325,6 +326,7 @@ export default function Index() {
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
     Taro.removeStorageSync('userId')
+    Taro.removeStorageSync('lastLoginTime')
     setShowUserDialog(false)
     // 清空数据
     setCategories([])
@@ -410,6 +412,18 @@ export default function Index() {
     const userId = Taro.getStorageSync('userId')
     if (!userId) return
     
+    // 检查是否超过两天未登录
+    const lastLoginTime = Taro.getStorageSync('lastLoginTime')
+    const twoDaysInMs = 2 * 24 * 60 * 60 * 1000
+    if (lastLoginTime && (Date.now() - lastLoginTime) > twoDaysInMs) {
+      // 超过两天，自动登出
+      console.log('超过两天未登录，自动登出')
+      setCurrentUser(null)
+      Taro.removeStorageSync('userId')
+      Taro.removeStorageSync('lastLoginTime')
+      return
+    }
+    
     try {
       const res = await Network.request({
         url: '/api/users/me',
@@ -417,6 +431,8 @@ export default function Index() {
       })
       if (res.data?.code === 200 && res.data?.data) {
         setCurrentUser(res.data.data as UserInfo)
+        // 更新登录时间
+        Taro.setStorageSync('lastLoginTime', Date.now())
       }
     } catch (err) {
       // 请求失败时不要立即登出，可能是网络问题
