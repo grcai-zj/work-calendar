@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+// eslint-disable-next-line no-restricted-syntax
+import { View, Text, ScrollView, Image, Button as TaroButton } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
   ChevronLeft,
@@ -123,6 +124,7 @@ export default function Index() {
   const [codeSending, setCodeSending] = useState(false)
   const [codeCountdown, setCodeCountdown] = useState(0)
   const [loginLoading, setLoginLoading] = useState(false)
+  const [avatarUrl, setAvatarUrl] = useState('')
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -303,6 +305,7 @@ export default function Index() {
         data: {
           code: loginRes.code, // 实际项目中应该用 code 换取 openid
           nickname: '用户',
+          avatarUrl: avatarUrl || undefined,
         },
       })
 
@@ -764,9 +767,13 @@ export default function Index() {
               onClick={() => setShowUserDialog(true)}
             >
               {currentUser ? (
-                <Text className="block text-sm font-bold text-blue-600">
-                  {currentUser.nickname?.charAt(0) || 'U'}
-                </Text>
+                currentUser.avatar_url ? (
+                  <Image src={currentUser.avatar_url} className="h-9 w-9 rounded-full" mode="aspectFill" />
+                ) : (
+                  <Text className="block text-sm font-bold text-blue-600">
+                    {currentUser.nickname?.charAt(0) || 'U'}
+                  </Text>
+                )
               ) : (
                 <Text className="block text-sm font-medium text-blue-400">登录</Text>
               )}
@@ -1328,6 +1335,24 @@ export default function Index() {
                 <Text className="block text-sm text-gray-500 text-center">
                   登录后可以保存您的工作记录和待办事项
                 </Text>
+                <View className="flex flex-col items-center gap-2">
+                  <TaroButton
+                    open-type="chooseAvatar"
+                    onChooseAvatar={(e) => {
+                      console.log('选择头像:', e.detail.avatarUrl)
+                      setAvatarUrl(e.detail.avatarUrl || '')
+                    }}
+                    className="h-16 w-16 rounded-full bg-gray-100 flex items-center justify-center overflow-hidden"
+                    style={{ padding: 0, margin: 0, lineHeight: 1 }}
+                  >
+                    {avatarUrl ? (
+                      <Image src={avatarUrl} className="h-16 w-16 rounded-full" mode="aspectFill" />
+                    ) : (
+                      <Text className="block text-xs text-gray-400">选择头像</Text>
+                    )}
+                  </TaroButton>
+                  <Text className="block text-xs text-gray-400">点击选择头像</Text>
+                </View>
                 <Button
                   onClick={handleLogin}
                 >
