@@ -320,7 +320,7 @@ export default function Index() {
       console.error('Login failed', e)
       Taro.showToast({ title: '登录失败', icon: 'none' })
     }
-  }, [isMiniApp])
+  }, [isMiniApp, avatarUrl])
 
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
