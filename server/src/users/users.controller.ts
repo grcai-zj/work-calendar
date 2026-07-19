@@ -25,6 +25,9 @@ export class UsersController {
         nickname: body.nickname || user.nickname,
         avatar_url: body.avatarUrl || user.avatar_url,
       });
+      // 重新获取更新后的用户信息
+      const updatedUser = await this.usersService.findById(user.id);
+      return { code: 200, msg: 'success', data: updatedUser };
     }
     
     return { code: 200, msg: 'success', data: user };
