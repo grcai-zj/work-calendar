@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react'
-import { View, Text, ScrollView } from '@tarojs/components'
+import { View, Text, ScrollView, Image } from '@tarojs/components'
 import Taro from '@tarojs/taro'
 import {
   ChevronLeft,
@@ -1311,25 +1311,38 @@ export default function Index() {
           </DialogHeader>
           <View className="py-4">
             {currentUser ? (
-              <View className="items-center gap-4">
-                <View className="h-16 w-16 rounded-full bg-blue-100 items-center justify-center">
-                  <Text className="block text-2xl font-bold text-blue-600">
-                    {currentUser.nickname?.charAt(0) || 'U'}
+              <View className="flex flex-col items-center gap-4">
+                {currentUser.avatar_url ? (
+                  <Image
+                    src={currentUser.avatar_url}
+                    style={{ width: '80px', height: '80px', borderRadius: '50%' }}
+                    mode="aspectFill"
+                  />
+                ) : (
+                  <View className="h-20 w-20 rounded-full bg-blue-100 items-center justify-center">
+                    <Text className="block text-3xl font-bold text-blue-600">
+                      {currentUser.nickname?.charAt(0) || 'U'}
+                    </Text>
+                  </View>
+                )}
+                <View className="flex flex-col items-center gap-1">
+                  <Text className="block text-lg font-semibold text-gray-900">
+                    {currentUser.nickname || '用户'}
+                  </Text>
+                  <Text className="block text-sm text-gray-500">
+                    {currentUser.phone || currentUser.openid?.substring(0, 8) + '...' || '未知'}
                   </Text>
                 </View>
-                <Text className="block text-lg font-semibold text-gray-900">
-                  {currentUser.nickname || '用户'}
-                </Text>
                 <Button
                   variant="outline"
-                  className="w-full mt-4"
+                  className="w-full mt-2"
                   onClick={handleLogout}
                 >
                   <Text>退出登录</Text>
                 </Button>
               </View>
             ) : isMiniApp ? (
-              <View className="items-center gap-4">
+              <View className="flex flex-row items-center gap-4">
                 <View className="h-16 w-16 rounded-full bg-gray-100 items-center justify-center">
                   <Text className="block text-2xl text-gray-400">?</Text>
                 </View>
