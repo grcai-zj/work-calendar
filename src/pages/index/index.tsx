@@ -35,6 +35,7 @@ import './index.css'
 interface UserInfo {
   id: string
   openid: string
+  phone?: string
   nickname?: string
   avatar_url?: string
 }
@@ -1304,6 +1305,9 @@ export default function Index() {
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle>用户管理</DialogTitle>
+            <Text className="block text-xs text-gray-500 mt-1">
+              {currentUser ? `已登录：${currentUser.phone || currentUser.openid || '未知'}` : '未登录'}
+            </Text>
           </DialogHeader>
           <View className="py-4">
             {currentUser ? (
