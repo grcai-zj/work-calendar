@@ -405,22 +405,42 @@ export default function Index() {
   }, [currentUser, workRecords, selectedDate])
 
   // 初始化时检查本地存储的用户信息
-  useEffect(() => {
+  // 获取用户信息的函数
+  const fetchUserInfo = useCallback(async () => {
     const userId = Taro.getStorageSync('userId')
-    if (userId) {
-      // 获取用户信息
-      Network.request({
+    if (!userId) return
+    
+    try {
+      const res = await Network.request({
         url: '/api/users/me',
         header: { 'x-user-id': userId },
-      }).then(res => {
-        if (res.data?.code === 200 && res.data?.data) {
-          setCurrentUser(res.data.data as UserInfo)
-        }
-      }).catch(() => {
-        Taro.removeStorageSync('userId')
       })
+      if (res.data?.code === 200 && res.data?.data) {
+        setCurrentUser(res.data.data as UserInfo)
+      }
+    } catch (err) {
+      // 请求失败时不要立即登出，可能是网络问题
+      console.error('获取用户信息失败:', err)
     }
   }, [])
+
+  // 初始化时获取用户信息
+  useEffect(() => {
+    fetchUserInfo()
+  }, [fetchUserInfo])
+
+  // 小程序从后台回到前台时重新获取用户信息
+  useEffect(() => {
+    if (Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT) {
+      const onShow = () => {
+        fetchUserInfo()
+      }
+      Taro.onAppShow(onShow)
+      return () => {
+        Taro.offAppShow(onShow)
+      }
+    }
+  }, [fetchUserInfo])
 
   // ========== Data Fetching ==========
   const fetchCategories = useCallback(async () => {
