@@ -307,41 +307,54 @@ export default function Index() {
       ].join('\n')
 
       // 在小程序中使用文件系统保存
-      const fs = Taro.getFileSystemManager()
-      const filePath = `${Taro.env.USER_DATA_PATH}/work_records_${exportStartDate}_${exportEndDate}.csv`
+      const isMiniAppEnv = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
       
-      fs.writeFile({
-        filePath,
-        data: csvContent,
-        encoding: 'utf8',
-        success: () => {
-          Taro.openDocument({
-            filePath,
-            showMenu: true,
-            success: () => {
-              Taro.showToast({ title: '导出成功', icon: 'success' })
-            },
-            fail: (err) => {
-              console.error('打开文档失败', err)
-              Taro.setClipboardData({
-                data: csvContent,
-                success: () => {
-                  Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
-                }
-              })
-            }
-          })
-        },
-        fail: (err) => {
-          console.error('保存文件失败', err)
-          Taro.setClipboardData({
-            data: csvContent,
-            success: () => {
-              Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
-            }
-          })
-        }
-      })
+      if (isMiniAppEnv) {
+        const fs = Taro.getFileSystemManager()
+        const filePath = `${Taro.env.USER_DATA_PATH}/work_records_${exportStartDate}_${exportEndDate}.csv`
+        
+        fs.writeFile({
+          filePath,
+          data: csvContent,
+          encoding: 'utf8',
+          success: () => {
+            Taro.openDocument({
+              filePath,
+              showMenu: true,
+              success: () => {
+                Taro.showToast({ title: '导出成功', icon: 'success' })
+              },
+              fail: (err) => {
+                console.error('打开文档失败', err)
+                Taro.setClipboardData({
+                  data: csvContent,
+                  success: () => {
+                    Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+                  }
+                })
+              }
+            })
+          },
+          fail: (err) => {
+            console.error('保存文件失败', err)
+            Taro.setClipboardData({
+              data: csvContent,
+              success: () => {
+                Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+              }
+            })
+          }
+        })
+      } else {
+        // H5 环境：使用 Blob 下载
+        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const link = document.createElement('a')
+        link.href = URL.createObjectURL(blob)
+        link.download = `work_records_${exportStartDate}_${exportEndDate}.csv`
+        link.click()
+        URL.revokeObjectURL(link.href)
+        Taro.showToast({ title: '导出成功', icon: 'success' })
+      }
     } catch (err) {
       console.error('导出失败', err)
       Taro.showToast({ title: '导出失败', icon: 'none' })
