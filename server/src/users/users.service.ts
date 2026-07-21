@@ -142,7 +142,8 @@ export class UsersService {
           nickname: nickname || existingUser.nickname,
           avatar_url: avatarUrl || existingUser.avatar_url,
         });
-        return await this.findById(existingUser.id);
+        const updatedUser = await this.findById(existingUser.id);
+        if (updatedUser) return updatedUser;
       }
       return existingUser;
     }
