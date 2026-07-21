@@ -121,6 +121,7 @@ export default function Index() {
   const [showUserDialog, setShowUserDialog] = useState(false)
   const [exportStartDate, setExportStartDate] = useState('')
   const [exportEndDate, setExportEndDate] = useState('')
+  const [showExportDialog, setShowExportDialog] = useState(false)
   const [loginPhone, setLoginPhone] = useState('')
   const [loginCode, setLoginCode] = useState('')
   const [codeSending, setCodeSending] = useState(false)
@@ -1476,51 +1477,23 @@ export default function Index() {
                   账号：{currentUser.phone || currentUser.openid || '未知'}
                 </Text>
                 
-                {/* 数据导出 */}
-                <View className="flex flex-col gap-3 pt-2 border-t border-gray-100">
-                  <Text className="block text-sm font-medium text-gray-700">导出数据</Text>
-                  <View className="flex flex-row gap-2">
-                    <View className="flex-1">
-                      <Text className="block text-xs text-gray-500 mb-1">起始日期</Text>
-                      <View className="bg-gray-50 rounded-lg px-3 py-2">
-                        <Input
-                          className="w-full bg-transparent text-sm"
-                          type="text"
-                          placeholder="如：2024-01-01"
-                          value={exportStartDate}
-                          onInput={(e) => setExportStartDate(e.detail.value)}
-                        />
-                      </View>
-                    </View>
-                    <View className="flex-1">
-                      <Text className="block text-xs text-gray-500 mb-1">结束日期</Text>
-                      <View className="bg-gray-50 rounded-lg px-3 py-2">
-                        <Input
-                          className="w-full bg-transparent text-sm"
-                          type="text"
-                          placeholder="如：2024-01-31"
-                          value={exportEndDate}
-                          onInput={(e) => setExportEndDate(e.detail.value)}
-                        />
-                      </View>
-                    </View>
-                  </View>
+                {/* 操作按钮 */}
+                <View className="flex flex-row gap-3 pt-2 border-t border-gray-100">
                   <Button
                     variant="outline"
-                    className="w-full"
-                    onClick={handleExportByDateRange}
+                    className="flex-1"
+                    onClick={() => setShowExportDialog(true)}
                   >
-                    <Text>导出工作内容 (CSV)</Text>
+                    <Text>导出数据</Text>
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="flex-1"
+                    onClick={handleLogout}
+                  >
+                    <Text>退出登录</Text>
                   </Button>
                 </View>
-                
-                <Button
-                  variant="outline"
-                  className="w-full"
-                  onClick={handleLogout}
-                >
-                  <Text>退出登录</Text>
-                </Button>
               </View>
             ) : isMiniApp ? (
               <View className="flex flex-col gap-4 items-center">
@@ -1604,6 +1577,52 @@ export default function Index() {
               </View>
             )}
           </View>
+        </DialogContent>
+      </Dialog>
+
+      {/* ===== Export Date Range Dialog ===== */}
+      <Dialog open={showExportDialog} onOpenChange={setShowExportDialog}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>导出工作内容</DialogTitle>
+          </DialogHeader>
+          <View className="px-2 gap-4">
+            <View>
+              <Text className="block text-sm text-gray-600 mb-1">起始日期</Text>
+              <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <Input
+                  className="w-full bg-transparent text-sm"
+                  type="text"
+                  placeholder="如：2024-01-01"
+                  value={exportStartDate}
+                  onInput={(e) => setExportStartDate(e.detail.value)}
+                />
+              </View>
+            </View>
+            <View>
+              <Text className="block text-sm text-gray-600 mb-1">结束日期</Text>
+              <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <Input
+                  className="w-full bg-transparent text-sm"
+                  type="text"
+                  placeholder="如：2024-01-31"
+                  value={exportEndDate}
+                  onInput={(e) => setExportEndDate(e.detail.value)}
+                />
+              </View>
+            </View>
+            <Text className="block text-xs text-gray-400">
+              日期格式：YYYY-MM-DD，导出内容为 CSV 格式
+            </Text>
+          </View>
+          <DialogFooter className="gap-2">
+            <Button variant="outline" className="flex-1" onClick={() => setShowExportDialog(false)}>
+              <Text>取消</Text>
+            </Button>
+            <Button className="flex-1" onClick={() => { setShowExportDialog(false); handleExportByDateRange() }}>
+              <Text>导出</Text>
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
 
