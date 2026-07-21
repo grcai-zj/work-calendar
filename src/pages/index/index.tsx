@@ -292,18 +292,18 @@ export default function Index() {
         return
       }
 
-      // 构建 CSV 内容
-      const headers = ['日期', '大类', '小类', '内容', '耗时(h)']
+      // 构建 XLS 内容（使用制表符分隔）
+      const headers = ['日期', '大类', '小类', '内容', '耗时 (h)']
       const rows = records.map((record: any) => {
         const categoryName = record.category_name || ''
         const subCategoryName = record.sub_category_name || ''
-        const content = (record.content || '').replace(/,/g, '，')
+        const content = record.content || ''
         return [record.record_date, categoryName, subCategoryName, content, record.hours?.toString() || '0']
       })
 
-      const csvContent = [
-        headers.join(','),
-        ...rows.map((row: string[]) => row.join(','))
+      const xlsContent = [
+        headers.join('\t'),
+        ...rows.map((row: string[]) => row.join('\t'))
       ].join('\n')
 
       // 在小程序中使用文件系统保存
@@ -314,14 +314,14 @@ export default function Index() {
       if (isMiniAppEnv) {
         const fs = Taro.getFileSystemManager()
         // 使用临时文件路径
-        const fileName = `work_records_${exportStartDate}_${exportEndDate}.csv`
+        const fileName = `work_records_${exportStartDate}_${exportEndDate}.xls`
         const filePath = `${Taro.env.USER_DATA_PATH}/${fileName}`
         
         console.log('[Export] filePath:', filePath)
         
         fs.writeFile({
           filePath,
-          data: csvContent,
+          data: xlsContent,
           encoding: 'utf8',
           success: () => {
             console.log('[Export] writeFile success')
@@ -335,7 +335,7 @@ export default function Index() {
               fail: (err) => {
                 console.error('[Export] openDocument fail:', err)
                 Taro.setClipboardData({
-                  data: csvContent,
+                  data: xlsContent,
                   success: () => {
                     Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
                   }
@@ -346,7 +346,7 @@ export default function Index() {
           fail: (err) => {
             console.error('[Export] writeFile fail:', err)
             Taro.setClipboardData({
-              data: csvContent,
+              data: xlsContent,
               success: () => {
                 Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
               }
@@ -355,10 +355,10 @@ export default function Index() {
         })
       } else {
         // H5 环境：使用 Blob 下载
-        const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' })
+        const blob = new Blob(['\ufeff' + xlsContent], { type: 'application/vnd.ms-excel;charset=utf-8;' })
         const link = document.createElement('a')
         link.href = URL.createObjectURL(blob)
-        link.download = `work_records_${exportStartDate}_${exportEndDate}.csv`
+        link.download = `work_records_${exportStartDate}_${exportEndDate}.xls`
         link.click()
         URL.revokeObjectURL(link.href)
         Taro.showToast({ title: '导出成功', icon: 'success' })
