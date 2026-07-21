@@ -11,9 +11,11 @@ export class UsersController {
   async login(
     @Body() body: { code: string; nickname?: string; avatarUrl?: string },
   ) {
+    console.log('[Users] login request - code:', body.code);
     const user = await this.usersService.loginWithCode(
       body.code,
     );
+    console.log('[Users] login result - user:', user ? { id: user.id, nickname: user.nickname } : null);
     
     if (!user) {
       return { code: 400, msg: '微信登录失败', data: null };

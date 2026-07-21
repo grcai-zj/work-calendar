@@ -23,6 +23,7 @@ export class WorkRecordsService {
 
   // 按日期查询工作内容
   async findByDate(recordDate: string, userId?: string): Promise<WorkRecord[]> {
+    console.log('[WorkRecords] findByDate - date:', recordDate, 'userId:', userId);
     let query = this.client
       .from('work_records')
       .select('id, category_id, sub_category_id, content, hours, record_date, user_id, created_at, updated_at')
@@ -34,6 +35,7 @@ export class WorkRecordsService {
     }
 
     const { data, error } = await query;
+    console.log('[WorkRecords] query result - data count:', data?.length, 'error:', error?.message);
     if (error) throw new Error(`查询工作内容失败: ${error.message}`);
 
     // 批量获取分类名称
