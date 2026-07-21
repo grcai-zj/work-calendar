@@ -309,23 +309,31 @@ export default function Index() {
       // 在小程序中使用文件系统保存
       const isMiniAppEnv = Taro.getEnv() === Taro.ENV_TYPE.WEAPP || Taro.getEnv() === Taro.ENV_TYPE.TT
       
+      console.log('[Export] isMiniAppEnv:', isMiniAppEnv, 'env:', Taro.getEnv())
+      
       if (isMiniAppEnv) {
         const fs = Taro.getFileSystemManager()
-        const filePath = `${Taro.env.USER_DATA_PATH}/work_records_${exportStartDate}_${exportEndDate}.csv`
+        // 使用临时文件路径
+        const fileName = `work_records_${exportStartDate}_${exportEndDate}.csv`
+        const filePath = `${Taro.env.USER_DATA_PATH}/${fileName}`
+        
+        console.log('[Export] filePath:', filePath)
         
         fs.writeFile({
           filePath,
           data: csvContent,
           encoding: 'utf8',
           success: () => {
+            console.log('[Export] writeFile success')
             Taro.openDocument({
               filePath,
               showMenu: true,
               success: () => {
+                console.log('[Export] openDocument success')
                 Taro.showToast({ title: '导出成功', icon: 'success' })
               },
               fail: (err) => {
-                console.error('打开文档失败', err)
+                console.error('[Export] openDocument fail:', err)
                 Taro.setClipboardData({
                   data: csvContent,
                   success: () => {
@@ -336,7 +344,7 @@ export default function Index() {
             })
           },
           fail: (err) => {
-            console.error('保存文件失败', err)
+            console.error('[Export] writeFile fail:', err)
             Taro.setClipboardData({
               data: csvContent,
               success: () => {
