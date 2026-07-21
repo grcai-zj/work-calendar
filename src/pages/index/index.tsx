@@ -301,22 +301,28 @@ export default function Index() {
 
     try {
       console.log('[handleLogin] 开始登录...')
-      // 调用微信登录获取 code
+      
+      // 获取或生成固定的设备标识符
+      let deviceId = Taro.getStorageSync('deviceId')
+      if (!deviceId) {
+        // 生成随机设备 ID 并存储
+        deviceId = 'device_' + Math.random().toString(36).substring(2, 15)
+        Taro.setStorageSync('deviceId', deviceId)
+      }
+      console.log('[handleLogin] deviceId:', deviceId)
+      
+      // 调用微信登录获取 code（用于生产环境换取 openid）
       const loginRes = await Taro.login()
       console.log('[handleLogin] Taro.login 结果:', loginRes)
-      if (!loginRes.code) {
-        console.error('[handleLogin] 获取 code 失败')
-        Taro.showToast({ title: '登录失败：获取 code 失败', icon: 'none' })
-        return
-      }
 
       // 调用后端登录接口
+      // 开发环境使用 deviceId，生产环境使用 code 换取 openid
       console.log('[handleLogin] 调用后端登录接口...')
       const res = await Network.request({
         url: '/api/users/login',
         method: 'POST',
         data: {
-          code: loginRes.code, // 实际项目中应该用 code 换取 openid
+          code: loginRes.code || deviceId, // 开发环境用 deviceId，生产环境用 code
           nickname: '用户',
           avatarUrl: avatarUrl || undefined,
         },
