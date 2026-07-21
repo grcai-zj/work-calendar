@@ -126,6 +126,7 @@ export default function Index() {
   const [showExportEndDatePicker, setShowExportEndDatePicker] = useState(false)
   const [loginLoading, setLoginLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [wechatId, setWechatId] = useState('')
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -227,7 +228,7 @@ export default function Index() {
         method: 'POST',
         data: {
           code: loginRes.code,
-          nickname: '用户',
+          nickname: wechatId || '用户',
           avatarUrl: avatarUrl || undefined,
         },
       })
@@ -1342,7 +1343,7 @@ export default function Index() {
           <DialogHeader>
             <DialogTitle>用户管理</DialogTitle>
             <Text className="block text-xs text-gray-500 mt-1">
-              {currentUser ? `已登录：${currentUser.nickname || currentUser.phone || currentUser.openid || '未知'}` : '未登录'}
+              {currentUser ? `微信号：${currentUser.nickname || '未设置'}` : '未登录'}
             </Text>
           </DialogHeader>
           <View className="py-4">
@@ -1371,6 +1372,17 @@ export default function Index() {
                 <Text className="block text-sm text-gray-500 text-center">
                   登录后可以保存您的工作记录和待办事项
                 </Text>
+                <View className="w-full">
+                  <Text className="block text-sm text-gray-600 mb-1">微信号</Text>
+                  <View className="bg-gray-50 rounded-xl px-4 py-3">
+                    <Input
+                      className="w-full bg-transparent"
+                      placeholder="请输入微信号"
+                      value={wechatId}
+                      onInput={(e) => setWechatId(e.detail.value)}
+                    />
+                  </View>
+                </View>
                 <View className="flex flex-col items-center gap-2">
                   <TaroButton
                     open-type="chooseAvatar"
