@@ -1680,9 +1680,9 @@ export default function Index() {
               确定要删除这条记录吗？此操作无法撤销。
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete}>删除</AlertDialogAction>
+          <AlertDialogFooter className="flex-row justify-end gap-2">
+            <AlertDialogCancel className="flex-1">取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="flex-1">删除</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
