@@ -74,8 +74,28 @@ export class WorkRecordsService {
     }
 
     const { data, error } = await query;
-    if (error) throw new Error(`查询工作内容失败: ${error.message}`);
-    return data as WorkRecord[];
+    if (error) throw new Error(`查询工作内容失败：${error.message}`);
+
+    const records = data as WorkRecord[];
+    if (records.length === 0) return [];
+
+    // 批量获取分类名称
+    const categoryIds = [...new Set(records.flatMap(r => [r.category_id, r.sub_category_id].filter(Boolean)))];
+    if (categoryIds.length > 0) {
+      const { data: categories, error: catError } = await this.client
+        .from('categories')
+        .select('id, name')
+        .in('id', categoryIds);
+      if (catError) throw new Error(`查询分类失败：${catError.message}`);
+
+      const catMap = new Map((categories || []).map(c => [c.id, c.name]));
+      records.forEach(r => {
+        r.category_name = catMap.get(r.category_id) || '';
+        r.sub_category_name = r.sub_category_id ? (catMap.get(r.sub_category_id) || '') : '';
+      });
+    }
+
+    return records;
   }
 
   // 创建工作内容
