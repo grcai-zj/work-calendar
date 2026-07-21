@@ -211,8 +211,69 @@ export default function Index() {
   const currentEnv = Taro.getEnv()
   const isMiniApp = currentEnv === Taro.ENV_TYPE.WEAPP || currentEnv === Taro.ENV_TYPE.TT
 
+  // 发送验证码
+  const handleSendCode = useCallback(async () => {
+    if (!phone || phone.length !== 11) {
+      Taro.showToast({ title: '请输入正确的手机号', icon: 'none' })
+      return
+    }
+    try {
+      await Network.request({
+        url: '/api/users/send-code',
+        method: 'POST',
+        data: { phone },
+      })
+      Taro.showToast({ title: '验证码已发送', icon: 'success' })
+      setCodeCountdown(60)
+      const timer = setInterval(() => {
+        setCodeCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(timer)
+            return 0
+          }
+          return prev - 1
+        })
+      }, 1000)
+    } catch (e) {
+      console.error('发送验证码失败', e)
+      Taro.showToast({ title: '发送失败', icon: 'none' })
+    }
+  }, [phone])
 
-
+  // 手机号登录
+  const handlePhoneLogin = useCallback(async () => {
+    if (!phone || phone.length !== 11) {
+      Taro.showToast({ title: '请输入正确的手机号', icon: 'none' })
+      return
+    }
+    if (!verifyCode || verifyCode.length !== 6) {
+      Taro.showToast({ title: '请输入验证码', icon: 'none' })
+      return
+    }
+    setLoginLoading(true)
+    try {
+      const res = await Network.request({
+        url: '/api/users/phone-login',
+        method: 'POST',
+        data: { phone, code: verifyCode },
+      })
+      if (res.data?.code === 200 && res.data?.data) {
+        const user = res.data.data as UserInfo
+        setCurrentUser(user)
+        Taro.setStorageSync('userId', user.id)
+        Taro.setStorageSync('lastLoginTime', Date.now())
+        setShowUserDialog(false)
+        Taro.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' })
+      }
+    } catch (e) {
+      console.error('手机号登录失败', e)
+      Taro.showToast({ title: '登录失败', icon: 'none' })
+    } finally {
+      setLoginLoading(false)
+    }
+  }, [phone, verifyCode])
 
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
@@ -1369,12 +1430,19 @@ export default function Index() {
                   <Button
                     onClick={handlePhoneLogin}
                     className="w-full"
+                    disabled={loginLoading}
                   >
-                    <Text>手机号登录</Text>
+                    <Text>{loginLoading ? '登录中...' : '手机号登录'}</Text>
                   </Button>
                 </View>
               </View>
-)}
+            ) : (
+              <View className="flex flex-col gap-4 items-center">
+                <Text className="block text-sm text-gray-500 text-center">
+                  登录后可以保存您的工作记录和待办事项
+                </Text>
+              </View>
+            )}
           </View>
         </DialogContent>
       </Dialog>
