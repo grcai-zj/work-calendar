@@ -523,11 +523,17 @@ export default function Index() {
   }, [currentUser, getRequestHeaders])
 
   const fetchWorkRecords = useCallback(async () => {
-    if (!currentUser) { setWorkRecords([]); return }
+    if (!currentUser) { 
+      console.log('[fetchWorkRecords] 没有 currentUser，清空数据')
+      setWorkRecords([])
+      return 
+    }
+    const headers = getRequestHeaders()
+    console.log('[fetchWorkRecords] currentUser.id:', currentUser.id, 'headers:', headers)
     try {
       const res = await Network.request({
         url: `/api/work-records?date=${selectedDate}`,
-        header: getRequestHeaders(),
+        header: headers,
       })
       console.log('[API] work records:', res.data)
       setWorkRecords(res.data?.data || [])
