@@ -136,6 +136,14 @@ export class UsersService {
   async findOrCreateByOpenid(openid: string, nickname?: string, avatarUrl?: string): Promise<User> {
     const existingUser = await this.findByOpenid(openid);
     if (existingUser) {
+      // 更新用户信息（如果有新数据）
+      if (nickname || avatarUrl) {
+        await this.update(existingUser.id, {
+          nickname: nickname || existingUser.nickname,
+          avatar_url: avatarUrl || existingUser.avatar_url,
+        });
+        return await this.findById(existingUser.id);
+      }
       return existingUser;
     }
     return this.create(openid, nickname, avatarUrl);

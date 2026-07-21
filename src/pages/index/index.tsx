@@ -1342,16 +1342,12 @@ export default function Index() {
           <DialogHeader>
             <DialogTitle>用户管理</DialogTitle>
             <Text className="block text-xs text-gray-500 mt-1">
-              {currentUser ? `已登录：${currentUser.phone || currentUser.openid || '未知'}` : '未登录'}
+              {currentUser ? `已登录：${currentUser.nickname || '未知用户'}` : '未登录'}
             </Text>
           </DialogHeader>
           <View className="py-4">
             {currentUser ? (
               <View className="flex flex-col gap-4">
-                <Text className="block text-sm text-gray-600">
-                  账号：{currentUser.phone || currentUser.openid || '未知'}
-                </Text>
-                
                 {/* 操作按钮 */}
                 <View className="flex flex-row gap-3 pt-2 border-t border-gray-100">
                   <Button
