@@ -218,12 +218,18 @@ export default function Index() {
       return
     }
     try {
-      await Network.request({
+      const res = await Network.request({
         url: '/api/users/send-code',
         method: 'POST',
         data: { phone },
       })
-      Taro.showToast({ title: '验证码已发送', icon: 'success' })
+      // 开发环境：自动填充验证码
+      if (res.data?.data?.code) {
+        setVerifyCode(res.data.data.code)
+        Taro.showToast({ title: `验证码：${res.data.data.code}`, icon: 'none', duration: 3000 })
+      } else {
+        Taro.showToast({ title: '验证码已发送', icon: 'success' })
+      }
       setCodeCountdown(60)
       const timer = setInterval(() => {
         setCodeCountdown(prev => {
@@ -253,7 +259,7 @@ export default function Index() {
     setLoginLoading(true)
     try {
       const res = await Network.request({
-        url: '/api/users/phone-login',
+        url: '/api/users/login-by-phone',
         method: 'POST',
         data: { phone, code: verifyCode },
       })
