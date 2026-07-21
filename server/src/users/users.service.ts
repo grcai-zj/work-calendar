@@ -9,7 +9,7 @@ export class UsersService {
   }
 
   // 微信登录：使用 code 换取 openid
-  async loginWithCode(code: string): Promise<User | null> {
+  async loginWithCode(code: string, nickname?: string, avatarUrl?: string): Promise<User | null> {
     // 调用微信 code2Session 接口
     // 注意：实际生产环境需要配置 AppID 和 AppSecret
     // 这里简化处理，开发环境使用固定标识符
@@ -41,7 +41,7 @@ export class UsersService {
       }
     }
     
-    return this.findOrCreateByOpenid(openid);
+    return this.findOrCreateByOpenid(openid, nickname, avatarUrl);
   }
 
   async findByOpenid(openid: string): Promise<User | null> {
@@ -95,7 +95,7 @@ export class UsersService {
       .insert({
         id,
         openid,
-        nickname,
+        nickname: nickname || '用户',
         avatar_url: avatarUrl,
         created_at: now,
         updated_at: now,

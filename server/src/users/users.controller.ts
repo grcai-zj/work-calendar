@@ -14,6 +14,8 @@ export class UsersController {
     console.log('[Users] login request - code:', body.code);
     const user = await this.usersService.loginWithCode(
       body.code,
+      body.nickname,
+      body.avatarUrl,
     );
     console.log('[Users] login result - user:', user ? { id: user.id, nickname: user.nickname } : null);
     
