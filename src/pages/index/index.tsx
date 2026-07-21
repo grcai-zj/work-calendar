@@ -1414,7 +1414,7 @@ export default function Index() {
                     />
                   </View>
                   <View className="flex flex-row gap-2">
-                    <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
+                    <View className="w-32 bg-gray-50 rounded-xl px-4 py-3">
                       <Input
                         className="w-full bg-transparent"
                         placeholder="验证码"

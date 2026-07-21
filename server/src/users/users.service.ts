@@ -119,7 +119,7 @@ export class UsersService {
       .insert({
         id,
         phone,
-        nickname,
+        nickname: nickname || '用户',
         created_at: now,
         updated_at: now,
       })
