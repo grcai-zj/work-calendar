@@ -121,6 +121,9 @@ export default function Index() {
   const [exportStartDate, setExportStartDate] = useState('')
   const [exportEndDate, setExportEndDate] = useState('')
   const [showExportDialog, setShowExportDialog] = useState(false)
+  const [showWorkDatePicker, setShowWorkDatePicker] = useState(false)
+  const [showExportStartDatePicker, setShowExportStartDatePicker] = useState(false)
+  const [showExportEndDatePicker, setShowExportEndDatePicker] = useState(false)
   const [loginPhone, setLoginPhone] = useState('')
   const [loginCode, setLoginCode] = useState('')
   const [codeSending, setCodeSending] = useState(false)
@@ -1269,14 +1272,14 @@ export default function Index() {
             </View>
             <View>
               <Text className="block text-sm text-gray-600 mb-1">日期</Text>
-              <View className="bg-gray-50 rounded-xl px-4 py-2">
-                <Input
-                  className="w-full bg-transparent"
-                  type="text"
-                  placeholder="如：2024-01-15"
-                  value={workForm.record_date}
-                  onInput={(e) => setWorkForm({ ...workForm, record_date: e.detail.value })}
-                />
+              <View
+                className="flex flex-row items-center bg-gray-50 rounded-xl px-4 py-2"
+                onClick={() => setShowWorkDatePicker(true)}
+              >
+                <Calendar size={16} color="#9ca3af" />
+                <Text className="block flex-1 text-sm text-gray-700 ml-2">
+                  {workForm.record_date || '点击选择日期'}
+                </Text>
               </View>
             </View>
             <View>
@@ -1523,30 +1526,30 @@ export default function Index() {
           <View className="px-2 gap-4">
             <View>
               <Text className="block text-sm text-gray-600 mb-1">起始日期</Text>
-              <View className="bg-gray-50 rounded-lg px-3 py-2">
-                <Input
-                  className="w-full bg-transparent text-sm"
-                  type="text"
-                  placeholder="如：2024-01-01"
-                  value={exportStartDate}
-                  onInput={(e) => setExportStartDate(e.detail.value)}
-                />
+              <View
+                className="flex flex-row items-center bg-gray-50 rounded-lg px-3 py-2"
+                onClick={() => setShowExportStartDatePicker(true)}
+              >
+                <Calendar size={14} color="#9ca3af" />
+                <Text className="block flex-1 text-sm text-gray-700 ml-2">
+                  {exportStartDate || '点击选择日期'}
+                </Text>
               </View>
             </View>
             <View>
               <Text className="block text-sm text-gray-600 mb-1">结束日期</Text>
-              <View className="bg-gray-50 rounded-lg px-3 py-2">
-                <Input
-                  className="w-full bg-transparent text-sm"
-                  type="text"
-                  placeholder="如：2024-01-31"
-                  value={exportEndDate}
-                  onInput={(e) => setExportEndDate(e.detail.value)}
-                />
+              <View
+                className="flex flex-row items-center bg-gray-50 rounded-lg px-3 py-2"
+                onClick={() => setShowExportEndDatePicker(true)}
+              >
+                <Calendar size={14} color="#9ca3af" />
+                <Text className="block flex-1 text-sm text-gray-700 ml-2">
+                  {exportEndDate || '点击选择日期'}
+                </Text>
               </View>
             </View>
             <Text className="block text-xs text-gray-400">
-              日期格式：YYYY-MM-DD，导出内容为 CSV 格式
+              导出内容为 CSV 格式
             </Text>
           </View>
           <DialogFooter className="gap-2">
@@ -1566,6 +1569,30 @@ export default function Index() {
         onOpenChange={setShowDatePicker}
         value={todoForm.deadline}
         onConfirm={(date) => setTodoForm({ ...todoForm, deadline: date })}
+      />
+
+      {/* ===== Work Record Date Picker ===== */}
+      <DatePickerDialog
+        open={showWorkDatePicker}
+        onOpenChange={setShowWorkDatePicker}
+        value={workForm.record_date}
+        onConfirm={(date) => setWorkForm({ ...workForm, record_date: date })}
+      />
+
+      {/* ===== Export Start Date Picker ===== */}
+      <DatePickerDialog
+        open={showExportStartDatePicker}
+        onOpenChange={setShowExportStartDatePicker}
+        value={exportStartDate}
+        onConfirm={(date) => setExportStartDate(date)}
+      />
+
+      {/* ===== Export End Date Picker ===== */}
+      <DatePickerDialog
+        open={showExportEndDatePicker}
+        onOpenChange={setShowExportEndDatePicker}
+        value={exportEndDate}
+        onConfirm={(date) => setExportEndDate(date)}
       />
 
       {/* ===== Complete Todo Dialog ===== */}
