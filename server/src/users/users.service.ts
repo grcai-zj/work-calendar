@@ -12,13 +12,15 @@ export class UsersService {
   async loginWithCode(code: string): Promise<User | null> {
     // 调用微信 code2Session 接口
     // 注意：实际生产环境需要配置 AppID 和 AppSecret
-    // 这里简化处理，直接使用 code 作为 openid（开发环境）
+    // 这里简化处理，开发环境使用固定标识符
     // 生产环境需要替换为真实的微信 API 调用
     
     const appId = process.env.WECHAT_APP_ID;
     const appSecret = process.env.WECHAT_APP_SECRET;
     
-    let openid = code; // 开发环境：直接使用 code
+    // 开发环境：使用固定的测试用户标识，避免每次登录创建新用户
+    // 生产环境会通过微信 API 获取真实的 openid
+    let openid = 'dev_test_user';
     
     if (appId && appSecret) {
       try {
