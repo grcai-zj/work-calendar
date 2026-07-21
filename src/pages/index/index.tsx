@@ -1681,8 +1681,8 @@ export default function Index() {
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="flex-row justify-end gap-2">
-            <AlertDialogCancel className="flex-1">取消</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDelete} className="flex-1">删除</AlertDialogAction>
+            <AlertDialogCancel className="flex-1 mt-0">取消</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="flex-1 mt-0">删除</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
