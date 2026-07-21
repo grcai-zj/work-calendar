@@ -9,6 +9,7 @@ interface DatePickerDialogProps {
   onOpenChange: (open: boolean) => void
   value: string
   onConfirm: (date: string) => void
+  title?: string
 }
 
 const WEEKDAYS = ['日', '一', '二', '三', '四', '五', '六']
@@ -28,7 +29,7 @@ function getDaysInMonth(year: number, month: number): (number | null)[] {
   return days
 }
 
-export function DatePickerDialog({ open, onOpenChange, value, onConfirm }: DatePickerDialogProps) {
+export function DatePickerDialog({ open, onOpenChange, value, onConfirm, title = '选择日期' }: DatePickerDialogProps) {
   const today = new Date()
   const [year, setYear] = useState(today.getFullYear())
   const [month, setMonth] = useState(today.getMonth())
@@ -77,7 +78,7 @@ export function DatePickerDialog({ open, onOpenChange, value, onConfirm }: DateP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>选择截止日期</DialogTitle>
+          <DialogTitle>{title}</DialogTitle>
         </DialogHeader>
         <View className="px-2 gap-3">
           {/* Month navigation */}
@@ -117,12 +118,12 @@ export function DatePickerDialog({ open, onOpenChange, value, onConfirm }: DateP
                   onClick={() => setSelectedDay(day)}
                 >
                   <View
-                    className={`w-8 h-8 rounded-full items-center justify-center ${
+                    className={`w-8 h-8 rounded-full flex items-center justify-center ${
                       selected ? 'bg-blue-600' : todayMark ? 'bg-blue-100' : ''
                     }`}
                   >
                     <Text
-                      className={`block text-sm text-center ${
+                      className={`text-sm text-center leading-8 ${
                         selected ? 'text-white font-semibold' : todayMark ? 'text-blue-600 font-medium' : 'text-gray-700'
                       }`}
                     >
