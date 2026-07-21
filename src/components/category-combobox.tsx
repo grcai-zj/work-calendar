@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { View, Text } from '@tarojs/components'
+import { View, Text, ScrollView } from '@tarojs/components'
 import { ChevronDown, Plus, Search } from 'lucide-react-taro'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
@@ -110,7 +110,7 @@ export function CategoryCombobox({
           </View>
 
           {/* Options list */}
-          <View className="max-h-48">
+          <ScrollView scrollY className="max-h-48">
             {filteredItems.length > 0 ? (
               filteredItems.map((item) => (
                 <View
@@ -131,7 +131,7 @@ export function CategoryCombobox({
                 <Text className="block text-xs text-gray-400">无匹配项</Text>
               </View>
             ) : null}
-          </View>
+          </ScrollView>
 
           {/* Create new button */}
           {searchText.trim() && !categories.some((c) => c.name === searchText.trim()) && (
