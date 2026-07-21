@@ -124,12 +124,11 @@ export default function Index() {
   const [showWorkDatePicker, setShowWorkDatePicker] = useState(false)
   const [showExportStartDatePicker, setShowExportStartDatePicker] = useState(false)
   const [showExportEndDatePicker, setShowExportEndDatePicker] = useState(false)
-  const [loginPhone, setLoginPhone] = useState('')
-  const [loginCode, setLoginCode] = useState('')
-  const [codeSending, setCodeSending] = useState(false)
-  const [codeCountdown, setCodeCountdown] = useState(0)
   const [loginLoading, setLoginLoading] = useState(false)
   const [avatarUrl, setAvatarUrl] = useState('')
+  const [phone, setPhone] = useState('')
+  const [verifyCode, setVerifyCode] = useState('')
+  const [codeCountdown, setCodeCountdown] = useState(0)
   const [categories, setCategories] = useState<CategoryItem[]>([])
   const [workRecords, setWorkRecords] = useState<WorkRecord[]>([])
   const [todos, setTodos] = useState<TodoItem[]>([])
@@ -212,139 +211,8 @@ export default function Index() {
   const currentEnv = Taro.getEnv()
   const isMiniApp = currentEnv === Taro.ENV_TYPE.WEAPP || currentEnv === Taro.ENV_TYPE.TT
 
-  // 发送验证码
-  const handleSendCode = useCallback(async () => {
-    if (!loginPhone || !/^1[3-9]\d{9}$/.test(loginPhone)) {
-      Taro.showToast({ title: '请输入正确的手机号', icon: 'none' })
-      return
-    }
 
-    setCodeSending(true)
-    try {
-      const res = await Network.request({
-        url: '/api/users/send-code',
-        method: 'POST',
-        data: { phone: loginPhone },
-      })
 
-      if (res.data?.code === 200) {
-        Taro.showToast({ title: '验证码已发送', icon: 'success' })
-        // 开发环境显示验证码
-        if (res.data?.data?.code) {
-          console.log('[验证码]', res.data.data.code)
-        }
-        // 开始倒计时
-        setCodeCountdown(60)
-        const timer = setInterval(() => {
-          setCodeCountdown((prev) => {
-            if (prev <= 1) {
-              clearInterval(timer)
-              return 0
-            }
-            return prev - 1
-          })
-        }, 1000)
-      } else {
-        Taro.showToast({ title: '发送失败', icon: 'none' })
-      }
-    } catch (e) {
-      console.error('Send code failed', e)
-      Taro.showToast({ title: '发送失败', icon: 'none' })
-    } finally {
-      setCodeSending(false)
-    }
-  }, [loginPhone])
-
-  // 手机号登录
-  const handlePhoneLogin = useCallback(async () => {
-    if (!loginPhone || !/^1[3-9]\d{9}$/.test(loginPhone)) {
-      Taro.showToast({ title: '请输入正确的手机号', icon: 'none' })
-      return
-    }
-    if (!loginCode || loginCode.length !== 6) {
-      Taro.showToast({ title: '请输入6位验证码', icon: 'none' })
-      return
-    }
-
-    setLoginLoading(true)
-    try {
-      const res = await Network.request({
-        url: '/api/users/login-by-phone',
-        method: 'POST',
-        data: { phone: loginPhone, code: loginCode },
-      })
-
-      if (res.data?.code === 200 && res.data?.data) {
-        const user = res.data.data as UserInfo
-        setCurrentUser(user)
-        Taro.setStorageSync('userId', user.id)
-        setShowUserDialog(false)
-        setLoginPhone('')
-        setLoginCode('')
-        Taro.showToast({ title: '登录成功', icon: 'success' })
-      } else {
-        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' })
-      }
-    } catch (e) {
-      console.error('Phone login failed', e)
-      Taro.showToast({ title: '登录失败', icon: 'none' })
-    } finally {
-      setLoginLoading(false)
-    }
-  }, [loginPhone, loginCode])
-
-  const handleLogin = useCallback(async () => {
-    if (!isMiniApp) {
-      // H5 使用手机号登录（在弹窗中处理）
-      return
-    }
-
-    try {
-      console.log('[handleLogin] 开始登录...')
-      
-      // 获取或生成固定的设备标识符
-      let deviceId = Taro.getStorageSync('deviceId')
-      if (!deviceId) {
-        // 生成随机设备 ID 并存储
-        deviceId = 'device_' + Math.random().toString(36).substring(2, 15)
-        Taro.setStorageSync('deviceId', deviceId)
-      }
-      console.log('[handleLogin] deviceId:', deviceId)
-      
-      // 调用微信登录获取 code（用于生产环境换取 openid）
-      const loginRes = await Taro.login()
-      console.log('[handleLogin] Taro.login 结果:', loginRes)
-
-      // 调用后端登录接口
-      // 开发环境使用 deviceId，生产环境使用 code 换取 openid
-      console.log('[handleLogin] 调用后端登录接口...')
-      const res = await Network.request({
-        url: '/api/users/login',
-        method: 'POST',
-        data: {
-          code: loginRes.code || deviceId, // 开发环境用 deviceId，生产环境用 code
-          nickname: '用户',
-          avatarUrl: avatarUrl || undefined,
-        },
-      })
-      console.log('[handleLogin] 后端响应:', res.data)
-
-      if (res.data?.code === 200 && res.data?.data) {
-        const user = res.data.data as UserInfo
-        setCurrentUser(user)
-        Taro.setStorageSync('userId', user.id)
-        Taro.setStorageSync('lastLoginTime', Date.now())
-        setShowUserDialog(false)
-        Taro.showToast({ title: '登录成功', icon: 'success' })
-      } else {
-        console.error('[handleLogin] 登录失败，响应:', res.data)
-        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' })
-      }
-    } catch (e) {
-      console.error('[handleLogin] 登录异常:', e)
-      Taro.showToast({ title: '登录失败：网络错误', icon: 'none' })
-    }
-  }, [isMiniApp, avatarUrl])
 
   const handleLogout = useCallback(() => {
     setCurrentUser(null)
@@ -1467,64 +1335,46 @@ export default function Index() {
                   </TaroButton>
                   <Text className="block text-xs text-gray-400">点击选择头像</Text>
                 </View>
-                <Button
-                  onClick={handleLogin}
-                >
-                  <Text>微信登录</Text>
-                </Button>
-              </View>
-            ) : (
-              <View className="gap-4">
-                <Text className="block text-sm text-gray-500 text-center">
-                  登录后可以保存您的工作记录和待办事项
-                </Text>
-                <View className="gap-3">
-                  <View>
-                    <Text className="block text-sm text-gray-600 mb-1">手机号</Text>
-                    <View className="bg-gray-50 rounded-lg px-3 py-2">
+                <View className="w-full flex flex-col gap-3">
+                  <View className="bg-gray-50 rounded-xl px-4 py-3">
+                    <Input
+                      className="w-full bg-transparent"
+                      placeholder="请输入手机号"
+                      type="number"
+                      maxlength={11}
+                      value={phone}
+                      onInput={(e) => setPhone(e.detail.value)}
+                    />
+                  </View>
+                  <View className="flex flex-row gap-2">
+                    <View className="flex-1 bg-gray-50 rounded-xl px-4 py-3">
                       <Input
                         className="w-full bg-transparent"
+                        placeholder="验证码"
                         type="number"
-                        placeholder="请输入手机号"
-                        maxlength={11}
-                        value={loginPhone}
-                        onInput={(e) => setLoginPhone(e.detail.value)}
+                        maxlength={6}
+                        value={verifyCode}
+                        onInput={(e) => setVerifyCode(e.detail.value)}
                       />
                     </View>
-                  </View>
-                  <View>
-                    <Text className="block text-sm text-gray-600 mb-1">验证码</Text>
-                    <View style={{ display: 'flex', flexDirection: 'row', gap: '8px' }}>
-                      <View className="bg-gray-50 rounded-lg px-3 py-2" style={{ flex: 1 }}>
-                        <Input
-                          className="w-full bg-transparent"
-                          type="number"
-                          placeholder="请输入验证码"
-                          maxlength={6}
-                          value={loginCode}
-                          onInput={(e) => setLoginCode(e.detail.value)}
-                        />
-                      </View>
-                      <Button
-                        variant="outline"
-                        className="shrink-0"
-                        disabled={codeSending || codeCountdown > 0}
-                        onClick={handleSendCode}
-                      >
-                        <Text>{codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码'}</Text>
-                      </Button>
-                    </View>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSendCode}
+                      disabled={codeCountdown > 0}
+                    >
+                      <Text>{codeCountdown > 0 ? `${codeCountdown}s` : '获取验证码'}</Text>
+                    </Button>
                   </View>
                   <Button
-                    className="w-full mt-2"
-                    disabled={loginLoading}
                     onClick={handlePhoneLogin}
+                    className="w-full"
                   >
-                    <Text>{loginLoading ? '登录中...' : '登录'}</Text>
+                    <Text>手机号登录</Text>
                   </Button>
                 </View>
               </View>
-            )}
+)}
           </View>
         </DialogContent>
       </Dialog>
