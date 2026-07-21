@@ -119,6 +119,8 @@ export default function Index() {
   // Data states
   const [currentUser, setCurrentUser] = useState<UserInfo | null>(null)
   const [showUserDialog, setShowUserDialog] = useState(false)
+  const [exportStartDate, setExportStartDate] = useState('')
+  const [exportEndDate, setExportEndDate] = useState('')
   const [loginPhone, setLoginPhone] = useState('')
   const [loginCode, setLoginCode] = useState('')
   const [codeSending, setCodeSending] = useState(false)
@@ -413,6 +415,91 @@ export default function Index() {
       })
     }
   }, [currentUser, workRecords, selectedDate])
+
+  // 导出指定日期范围的工作内容
+  const handleExportByDateRange = useCallback(async () => {
+    if (!currentUser) {
+      Taro.showToast({ title: '请先登录', icon: 'none' })
+      return
+    }
+    if (!exportStartDate || !exportEndDate) {
+      Taro.showToast({ title: '请选择日期范围', icon: 'none' })
+      return
+    }
+    if (exportStartDate > exportEndDate) {
+      Taro.showToast({ title: '起始日期不能大于结束日期', icon: 'none' })
+      return
+    }
+
+    try {
+      // 获取指定日期范围的工作记录
+      const res = await Network.request({
+        url: `/api/work-records/range?start_date=${exportStartDate}&end_date=${exportEndDate}`,
+        header: getRequestHeaders(),
+      })
+      console.log('[API] export range:', res.data)
+      
+      const records = res.data?.data || []
+      if (records.length === 0) {
+        Taro.showToast({ title: '该日期范围没有工作记录', icon: 'none' })
+        return
+      }
+
+      // 构建 CSV 内容
+      const headers = ['日期', '大类', '小类', '内容', '耗时(h)']
+      const rows = records.map((record: any) => {
+        const categoryName = record.category_name || ''
+        const subCategoryName = record.sub_category_name || ''
+        const content = (record.content || '').replace(/,/g, '，')
+        return [record.record_date, categoryName, subCategoryName, content, record.hours?.toString() || '0']
+      })
+
+      const csvContent = [
+        headers.join(','),
+        ...rows.map((row: string[]) => row.join(','))
+      ].join('\n')
+
+      // 在小程序中使用文件系统保存
+      const fs = Taro.getFileSystemManager()
+      const filePath = `${Taro.env.USER_DATA_PATH}/work_records_${exportStartDate}_${exportEndDate}.csv`
+      
+      fs.writeFile({
+        filePath,
+        data: csvContent,
+        encoding: 'utf8',
+        success: () => {
+          Taro.openDocument({
+            filePath,
+            showMenu: true,
+            success: () => {
+              Taro.showToast({ title: '导出成功', icon: 'success' })
+            },
+            fail: (err) => {
+              console.error('打开文档失败', err)
+              Taro.setClipboardData({
+                data: csvContent,
+                success: () => {
+                  Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+                }
+              })
+            }
+          })
+        },
+        fail: (err) => {
+          console.error('保存文件失败', err)
+          Taro.setClipboardData({
+            data: csvContent,
+            success: () => {
+              Taro.showToast({ title: '已复制到剪贴板', icon: 'success' })
+            }
+          })
+        }
+      })
+    } catch (err) {
+      console.error('导出失败', err)
+      Taro.showToast({ title: '导出失败', icon: 'none' })
+    }
+  }, [currentUser, exportStartDate, exportEndDate, getRequestHeaders])
 
   // 初始化时检查本地存储的用户信息
   // 获取用户信息的函数
@@ -1388,6 +1475,45 @@ export default function Index() {
                 <Text className="block text-sm text-gray-600">
                   账号：{currentUser.phone || currentUser.openid || '未知'}
                 </Text>
+                
+                {/* 数据导出 */}
+                <View className="flex flex-col gap-3 pt-2 border-t border-gray-100">
+                  <Text className="block text-sm font-medium text-gray-700">导出数据</Text>
+                  <View className="flex flex-row gap-2">
+                    <View className="flex-1">
+                      <Text className="block text-xs text-gray-500 mb-1">起始日期</Text>
+                      <View className="bg-gray-50 rounded-lg px-3 py-2">
+                        <Input
+                          className="w-full bg-transparent text-sm"
+                          type="text"
+                          placeholder="如：2024-01-01"
+                          value={exportStartDate}
+                          onInput={(e) => setExportStartDate(e.detail.value)}
+                        />
+                      </View>
+                    </View>
+                    <View className="flex-1">
+                      <Text className="block text-xs text-gray-500 mb-1">结束日期</Text>
+                      <View className="bg-gray-50 rounded-lg px-3 py-2">
+                        <Input
+                          className="w-full bg-transparent text-sm"
+                          type="text"
+                          placeholder="如：2024-01-31"
+                          value={exportEndDate}
+                          onInput={(e) => setExportEndDate(e.detail.value)}
+                        />
+                      </View>
+                    </View>
+                  </View>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    onClick={handleExportByDateRange}
+                  >
+                    <Text>导出工作内容 (CSV)</Text>
+                  </Button>
+                </View>
+                
                 <Button
                   variant="outline"
                   className="w-full"
