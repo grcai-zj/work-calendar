@@ -145,7 +145,7 @@ export default function Index() {
   const [completeHours, setCompleteHours] = useState('')
 
   // Form states
-  const [workForm, setWorkForm] = useState({ category_id: '', sub_category_id: '', content: '', hours: '' })
+  const [workForm, setWorkForm] = useState({ category_id: '', sub_category_id: '', content: '', hours: '', record_date: '' })
   const [todoForm, setTodoForm] = useState({
     category_id: '', sub_category_id: '', content: '', related_person: '',
     priority: 'urgent_important', deadline: '',
@@ -159,11 +159,15 @@ export default function Index() {
         sub_category_id: editingWork.sub_category_id || '',
         content: editingWork.content || '',
         hours: editingWork.hours ? String(editingWork.hours) : '',
+        record_date: editingWork.record_date || selectedDate,
       })
     } else if (!showAddWork) {
-      setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '' })
+      setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '', record_date: '' })
+    } else if (!editingWork) {
+      // 新建时默认使用当前选中日期
+      setWorkForm(prev => ({ ...prev, record_date: selectedDate }))
     }
-  }, [editingWork, showAddWork])
+  }, [editingWork, showAddWork, selectedDate])
 
   useEffect(() => {
     if (editingTodo) {
@@ -614,12 +618,16 @@ export default function Index() {
       Taro.showToast({ title: '请填写分类和内容', icon: 'none' })
       return
     }
+    if (!workForm.record_date) {
+      Taro.showToast({ title: '请选择日期', icon: 'none' })
+      return
+    }
     try {
       const body: any = {
         category_id: workForm.category_id,
         content: workForm.content,
         hours: parseFloat(workForm.hours) || 0,
-        record_date: selectedDate,
+        record_date: workForm.record_date,
       }
       if (workForm.sub_category_id) body.sub_category_id = workForm.sub_category_id
       
@@ -634,7 +642,7 @@ export default function Index() {
       }
       setShowAddWork(false)
       setEditingWork(null)
-      setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '' })
+      setWorkForm({ category_id: '', sub_category_id: '', content: '', hours: '', record_date: '' })
       fetchWorkRecords()
       fetchCategories()
     } catch (e) {
@@ -1256,6 +1264,18 @@ export default function Index() {
                   value={workForm.content}
                   onInput={(e) => setWorkForm({ ...workForm, content: e.detail.value })}
                   maxlength={500}
+                />
+              </View>
+            </View>
+            <View>
+              <Text className="block text-sm text-gray-600 mb-1">日期</Text>
+              <View className="bg-gray-50 rounded-xl px-4 py-2">
+                <Input
+                  className="w-full bg-transparent"
+                  type="text"
+                  placeholder="如：2024-01-15"
+                  value={workForm.record_date}
+                  onInput={(e) => setWorkForm({ ...workForm, record_date: e.detail.value })}
                 />
               </View>
             </View>
