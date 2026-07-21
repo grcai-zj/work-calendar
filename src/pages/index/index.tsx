@@ -1232,6 +1232,7 @@ export default function Index() {
               type="work"
               label="大类"
               onCategoryCreated={() => fetchCategories()}
+              userId={currentUser?.id}
             />
             <CategoryCombobox
               categories={visibleWorkSubCategories}
@@ -1242,6 +1243,7 @@ export default function Index() {
               parentId={workForm.category_id || undefined}
               label="小类"
               onCategoryCreated={() => fetchCategories()}
+              userId={currentUser?.id}
             />
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>
@@ -1294,6 +1296,7 @@ export default function Index() {
               type="todo"
               label="大类"
               onCategoryCreated={() => fetchCategories()}
+              userId={currentUser?.id}
             />
             <CategoryCombobox
               categories={visibleTodoSubCategories}
@@ -1304,6 +1307,7 @@ export default function Index() {
               parentId={todoForm.category_id || undefined}
               label="小类"
               onCategoryCreated={() => fetchCategories()}
+              userId={currentUser?.id}
             />
             <View>
               <Text className="block text-sm text-gray-600 mb-1">内容</Text>

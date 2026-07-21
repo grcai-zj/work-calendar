@@ -23,6 +23,7 @@ interface CategoryComboboxProps {
   parentId?: string | null
   label: string
   onCategoryCreated?: (newCategory: CategoryItem) => void
+  userId?: string
 }
 
 export function CategoryCombobox({
@@ -34,6 +35,7 @@ export function CategoryCombobox({
   parentId = null,
   label,
   onCategoryCreated,
+  userId,
 }: CategoryComboboxProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [searchText, setSearchText] = useState('')
@@ -56,7 +58,8 @@ export function CategoryCombobox({
     try {
       const body: any = { name: searchText.trim(), type }
       if (parentId) body.parent_id = parentId
-      const res = await Network.request({ url: '/api/categories', method: 'POST', data: body })
+      const header = userId ? { 'x-user-id': userId } : {}
+      const res = await Network.request({ url: '/api/categories', method: 'POST', data: body, header })
       console.log('[API] create category:', res.data)
       const newCategory = res.data?.data
       if (newCategory?.id) {
