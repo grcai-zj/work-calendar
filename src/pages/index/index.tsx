@@ -291,14 +291,18 @@ export default function Index() {
     }
 
     try {
+      console.log('[handleLogin] 开始登录...')
       // 调用微信登录获取 code
       const loginRes = await Taro.login()
+      console.log('[handleLogin] Taro.login 结果:', loginRes)
       if (!loginRes.code) {
-        Taro.showToast({ title: '登录失败', icon: 'none' })
+        console.error('[handleLogin] 获取 code 失败')
+        Taro.showToast({ title: '登录失败：获取 code 失败', icon: 'none' })
         return
       }
 
       // 调用后端登录接口
+      console.log('[handleLogin] 调用后端登录接口...')
       const res = await Network.request({
         url: '/api/users/login',
         method: 'POST',
@@ -308,6 +312,7 @@ export default function Index() {
           avatarUrl: avatarUrl || undefined,
         },
       })
+      console.log('[handleLogin] 后端响应:', res.data)
 
       if (res.data?.code === 200 && res.data?.data) {
         const user = res.data.data as UserInfo
@@ -316,10 +321,13 @@ export default function Index() {
         Taro.setStorageSync('lastLoginTime', Date.now())
         setShowUserDialog(false)
         Taro.showToast({ title: '登录成功', icon: 'success' })
+      } else {
+        console.error('[handleLogin] 登录失败，响应:', res.data)
+        Taro.showToast({ title: res.data?.msg || '登录失败', icon: 'none' })
       }
     } catch (e) {
-      console.error('Login failed', e)
-      Taro.showToast({ title: '登录失败', icon: 'none' })
+      console.error('[handleLogin] 登录异常:', e)
+      Taro.showToast({ title: '登录失败：网络错误', icon: 'none' })
     }
   }, [isMiniApp, avatarUrl])
 
@@ -410,14 +418,25 @@ export default function Index() {
   // 获取用户信息的函数
   const fetchUserInfo = useCallback(async () => {
     const userId = Taro.getStorageSync('userId')
-    if (!userId) return
+    if (!userId) {
+      console.log('[fetchUserInfo] 没有 userId，跳过')
+      return
+    }
     
     // 检查是否超过两天未登录
     const lastLoginTime = Taro.getStorageSync('lastLoginTime')
     const twoDaysInMs = 2 * 24 * 60 * 60 * 1000
-    if (lastLoginTime && (Date.now() - lastLoginTime) > twoDaysInMs) {
+    const now = Date.now()
+    
+    console.log('[fetchUserInfo] userId:', userId, 'lastLoginTime:', lastLoginTime, 'now:', now)
+    
+    // 如果没有 lastLoginTime（旧版本登录的），设置当前时间，不登出
+    if (!lastLoginTime) {
+      console.log('[fetchUserInfo] 没有 lastLoginTime，设置当前时间')
+      Taro.setStorageSync('lastLoginTime', now)
+    } else if ((now - lastLoginTime) > twoDaysInMs) {
       // 超过两天，自动登出
-      console.log('超过两天未登录，自动登出')
+      console.log('[fetchUserInfo] 超过两天未登录，自动登出')
       setCurrentUser(null)
       Taro.removeStorageSync('userId')
       Taro.removeStorageSync('lastLoginTime')
@@ -429,14 +448,21 @@ export default function Index() {
         url: '/api/users/me',
         header: { 'x-user-id': userId },
       })
+      console.log('[fetchUserInfo] /api/users/me 响应:', res.data)
       if (res.data?.code === 200 && res.data?.data) {
         setCurrentUser(res.data.data as UserInfo)
         // 更新登录时间
         Taro.setStorageSync('lastLoginTime', Date.now())
+      } else if (res.data?.code === 404) {
+        // 用户不存在，清除本地存储
+        console.log('[fetchUserInfo] 用户不存在，清除本地存储')
+        setCurrentUser(null)
+        Taro.removeStorageSync('userId')
+        Taro.removeStorageSync('lastLoginTime')
       }
     } catch (err) {
       // 请求失败时不要立即登出，可能是网络问题
-      console.error('获取用户信息失败:', err)
+      console.error('[fetchUserInfo] 获取用户信息失败:', err)
     }
   }, [])
 
