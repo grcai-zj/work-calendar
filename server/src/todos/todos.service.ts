@@ -112,8 +112,8 @@ export class TodosService {
 
         const subCatMap = new Map((subCategories || []).map(c => [c.id, c.name]));
         (subItems || []).forEach(item => {
-          item.category_name = subCatMap.get(item.category_id) || '';
-          item.sub_category_name = item.sub_category_id ? (subCatMap.get(item.sub_category_id) || '') : '';
+          (item as Todo).category_name = subCatMap.get(item.category_id) || '';
+          (item as Todo).sub_category_name = item.sub_category_id ? (subCatMap.get(item.sub_category_id) || '') : '';
         });
       }
 
