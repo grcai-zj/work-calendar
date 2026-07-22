@@ -99,7 +99,23 @@ export class TodosService {
         .select('id, category_id, sub_category_id, content, related_person, priority, deadline, status, parent_todo_id, hours, user_id, completed_at, created_at, updated_at')
         .in('parent_todo_id', todoIds)
         .order('created_at', { ascending: true });
-      if (subError) throw new Error(`查询子项失败: ${subError.message}`);
+      if (subError) throw new Error(`查询子项失败：${subError.message}`);
+
+      // 批量获取子项的分类名称
+      const subCategoryIds = [...new Set((subItems || []).flatMap(t => [t.category_id, t.sub_category_id].filter(Boolean)))];
+      if (subCategoryIds.length > 0) {
+        const { data: subCategories, error: subCatError } = await this.client
+          .from('categories')
+          .select('id, name')
+          .in('id', subCategoryIds);
+        if (subCatError) throw new Error(`查询子项分类失败：${subCatError.message}`);
+
+        const subCatMap = new Map((subCategories || []).map(c => [c.id, c.name]));
+        (subItems || []).forEach(item => {
+          item.category_name = subCatMap.get(item.category_id) || '';
+          item.sub_category_name = item.sub_category_id ? (subCatMap.get(item.sub_category_id) || '') : '';
+        });
+      }
 
       const subMap = new Map<string, Todo[]>();
       (subItems || []).forEach((item: Todo) => {
